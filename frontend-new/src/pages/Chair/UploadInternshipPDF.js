@@ -198,6 +198,7 @@ const UploadInternshipPDF = () => {
             let successCount = 0;
             let failCount = 0;
             const errors = [];
+            const failedStudents = [];
 
             // Save all students
             for (let i = 0; i < studentsData.length; i++) {
@@ -230,10 +231,18 @@ const UploadInternshipPDF = () => {
                     successCount++;
                 } catch (err) {
                     failCount++;
+                    failedStudents.push(student);
                     const errorMsg = err.response?.data?.error || err.message;
                     errors.push(`${student.studentInfo.name}: ${errorMsg}`);
                     console.error(`Error saving student ${student.studentInfo.name}:`, err);
                 }
+            }
+
+            // Keep only failed records so retrying cannot submit successful records twice.
+            if (failedStudents.length) {
+                setStudentsData(failedStudents);
+                setUploadedFiles(failedStudents.map(student => student.fileName));
+                setCurrentStudentIndex(0);
             }
 
             // Show results
@@ -257,15 +266,16 @@ const UploadInternshipPDF = () => {
 
     const handleRejectStudent = () => {
         showConfirm('Bu öğrenciyi reddetmek istediğinizden emin misiniz?', () => {
-            console.log('Öğrenci reddedildi:', studentsData[currentStudentIndex]);
-            
-            if (currentStudentIndex < studentsData.length - 1) {
-                setCurrentStudentIndex(currentStudentIndex + 1);
-                showToast('Öğrenci reddedildi', 'warning');
-            } else {
-                showToast('İşlem tamamlandı!', 'success');
+            // Remove rejected records from the save queue instead of only moving the cursor.
+            const remaining = studentsData.filter((_, index) => index !== currentStudentIndex);
+            if (!remaining.length) {
                 resetForm();
+            } else {
+                setStudentsData(remaining);
+                setUploadedFiles(remaining.map(student => student.fileName));
+                setCurrentStudentIndex(Math.min(currentStudentIndex, remaining.length - 1));
             }
+            showToast('Öğrenci reddedildi', 'warning');
         });
     };
 
