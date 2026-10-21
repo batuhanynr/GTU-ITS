@@ -2,20 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma.js';
 import nodemailer from 'nodemailer';
-
-// Configure Email Transporter (optional).
-// If EMAIL_USER / EMAIL_PASS are not set, emails are skipped and the password
-// reset code is printed to the server console instead (handy for local demos).
-const emailEnabled = Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
-const transporter = emailEnabled
-    ? nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        }
-    })
-    : null;
+import { randomInt } from 'node:crypto';
 
 export const login = async (req, res) => {
     try {
@@ -77,13 +64,22 @@ export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
 
+        // Read mail settings at request time, after the application loads its environment.
+        if (!process.env.EMAIL_USER?.trim() || !process.env.EMAIL_PASS?.trim()) {
+            return res.status(503).json({ error: 'Şifre sıfırlama e-postası yapılandırılmamış. Sistem yöneticinizle iletişime geçiniz.' });
+        }
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+        });
+
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
             return res.status(404).json({ error: 'Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı.' });
         }
 
         // Generate 6-digit code
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const code = randomInt(100000, 1000000).toString();
         
         // Save to DB (expires in 15 mins)
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
@@ -101,25 +97,20 @@ export const forgotPassword = async (req, res) => {
             }
         });
 
-        console.log(`[DEV ONLY] Password Reset Code for ${email}: ${code}`);
-
-        // Send the code by email if email is configured; otherwise the console
-        // log above is the fallback for local development/demos.
-        if (transporter) {
-            const mailOptions = {
+        try {
+            const result = await transporter.sendMail({
                 from: process.env.EMAIL_USER,
-                to: email, // Send to the user who requested the reset
+                to: email,
                 subject: 'ITS Şifre Sıfırlama Kodu',
                 text: `Şifre sıfırlama kodunuz: ${code}\n\nBu kod 15 dakika süreyle geçerlidir.`
-            };
-
-            transporter.sendMail(mailOptions, function(error, info) {
-                if (error) {
-                    console.log(error);
-                } else {
-                    console.log('Email sent: ' + info.response);
-                }
             });
+            if (!result.accepted?.some(recipient => (recipient.address || recipient) === email)) {
+                throw new Error('Recipient not accepted');
+            }
+        } catch {
+            // Remove only the failed request's code, leaving concurrent requests untouched.
+            await prisma.passwordResetToken.deleteMany({ where: { email, token: code } });
+            return res.status(502).json({ error: 'E-posta gönderilemedi. Lütfen tekrar deneyin veya sistem yöneticinize başvurun.' });
         }
 
         res.json({ message: 'Doğrulama kodu e-posta adresinize gönderildi.' });

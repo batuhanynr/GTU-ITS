@@ -93,7 +93,7 @@ JWT_SECRET=any_long_random_string_at_least_32_characters_long
 JWT_EXPIRE=7d
 CLIENT_URL=http://localhost:3000
 
-# Leave email blank for the demo — the password-reset code prints to the backend console.
+# Password reset is unavailable until email credentials are configured.
 EMAIL_USER=
 EMAIL_PASS=
 ```
@@ -238,19 +238,19 @@ visible** — one step reads a code from it.
     Members can view students, grade, early-evaluate, and generate reports — show
     one of those to prove role-scoped access.
 
-### Act 5 — Forgot-password flow (no email needed)
+### Act 5 — Forgot-password flow
 
-14. **Log out** → **Şifremi unuttum** on the login page.
-15. Step 1: enter a seeded email (e.g. `ceng_member2@example.com`) → **Kod Gönder**.
-16. **Switch to the backend terminal** and read the line:
-    `[DEV ONLY] Password Reset Code for ...: 123456`.
-17. Step 2: type that 6-digit code → Step 3: set a new password → you're bounced
-    to login. Sign in with the new password to confirm.
+Configure `EMAIL_USER` and `EMAIL_PASS` with a Gmail address and App Password before
+using password reset. Use a demo account whose mailbox you can access.
 
-That covers: role-based dashboards, admin commission management, forced password
-change, student listing/filtering, grading (single + bulk), early evaluation,
-Word-report generation, PDF parsing + the STAJ1→STAJ2 rule, member scoping, and
-the full password-reset flow.
+14. Log out and click **Şifremi Unuttum?**.
+15. Enter the account email and click **Kod Gönder**.
+16. Read the six-digit code from the email, enter it, and set a new password.
+17. Log in with the new password.
+
+With blank mail settings, the form shows an unavailable message and stays on the
+email step. Failed delivery also shows an error. Reset codes are never printed to
+the server console.
 
 ---
 

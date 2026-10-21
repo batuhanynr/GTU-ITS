@@ -64,7 +64,7 @@ these before exposing it to real users. Several are quick wins.
 | `PORT` | – | Most hosts inject this automatically; the app honors it (`process.env.PORT`). |
 | `NODE_ENV` | – | `production`. |
 | `CLIENT_URL` | rec. | Your frontend origin; use it to lock down CORS (see checklist). |
-| `EMAIL_USER` / `EMAIL_PASS` | optional | Gmail address + **App Password** to actually email reset codes. If blank, codes are logged server-side only. |
+| `EMAIL_USER` / `EMAIL_PASS` | optional | Gmail address + **App Password** to actually email reset codes. If blank, password reset returns an unavailable message. |
 
 ### Frontend (build-time only — CRA inlines `REACT_APP_*` at build)
 
