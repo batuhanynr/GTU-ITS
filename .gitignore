@@ -42,3 +42,25 @@ coverage/
 
 # Misc
 *.pem
+
+# Keep local screenshots out of version control.
+/screenshots/
+/screenshots.zip
+
+# Ignore loose documents and media at the root while preserving app assets and documentation.
+/*.pdf
+/*.doc
+/*.docx
+/*.ppt
+/*.pptx
+/*.xls
+/*.xlsx
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.webp
+/*.heic
+/*.zip
+/*.rar
+/*.7z
