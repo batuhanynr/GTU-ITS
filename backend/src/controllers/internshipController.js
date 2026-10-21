@@ -1,3 +1,4 @@
+import { calendarDate } from '../utils/calendarDate.js';
 import { departmentAccess } from '../utils/departmentAccess.js';
 import prisma from '../config/prisma.js';
 import { createRequire } from 'module';
@@ -61,6 +62,21 @@ export async function createInternship(req, res) {
       documentUrl
     } = req.body;
 
+    const requiredText = value => typeof value === 'string' && value.trim() && value.trim().toUpperCase() !== 'NOT FOUND';
+    const parsedStartDate = parseDate(startDate);
+    const parsedEndDate = parseDate(endDate);
+    const validId = value => Number.isSafeInteger(Number(value)) && Number(value) > 0;
+    const parsedDuration = duration === undefined ? 20 : Number(duration);
+    // Validate parsed fields before looking up or changing any database records.
+    if (!requiredText(studentName) || !requiredText(companyName) || typeof studentId !== 'string' || !/^\d+$/.test(studentId) ||
+        !validId(termId) || !validId(departmentId) || !parsedStartDate || !parsedEndDate || parsedEndDate < parsedStartDate ||
+        !Number.isInteger(parsedDuration) || parsedDuration <= 0 ||
+        (studentEmail !== undefined && studentEmail !== null && (typeof studentEmail !== 'string' || (studentEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(studentEmail)))) ||
+        (studentPhone !== undefined && typeof studentPhone !== 'string') ||
+        (req.file && !req.file.buffer.subarray(0, 5).equals(Buffer.from('%PDF-')))) {
+      return res.status(400).json({ error: 'Öğrenci, kurum, tarih ve süre bilgilerini kontrol ediniz; eksik veya geçersiz alanlar kaydedilemez.' });
+    }
+
     if (!await departmentAccess(req, res, departmentId)) return;
     const existingStudent = await prisma.student.findUnique({ where: { id: studentId } });
     if (existingStudent && !await departmentAccess(req, res, existingStudent.departmentId)) return;
@@ -123,16 +139,6 @@ export async function createInternship(req, res) {
       });
     }
 
-    // Convert dates from DD.MM.YYYY to ISO format
-    const parsedStartDate = parseDate(startDate);
-    const parsedEndDate = parseDate(endDate);
-
-    if (!parsedStartDate || !parsedEndDate) {
-      return res.status(400).json({ 
-        error: 'Invalid date format. Use DD.MM.YYYY' 
-      });
-    }
-
     // Upsert student (create if not exists, update if exists)
     await prisma.student.upsert({
       where: { id: studentId },
@@ -166,7 +172,7 @@ export async function createInternship(req, res) {
         termId: parseInt(termId),
         status: 'IN_PROGRESS',
         internshipOrder: internshipType,
-        durationDays: parseInt(duration) || 20,
+        durationDays: parsedDuration,
         isErasmus: isErasmus === true || isErasmus === 'true',
         companyContactName: contactName || null,
         companyContactPosition: contactPosition || null,
@@ -271,8 +277,8 @@ export async function updateInternship(req, res) {
     // Allow only form corrections; ownership, relations, and grades use separate workflows.
     const allowed = ['startDate', 'endDate', 'durationDays', 'companyContactName', 'companyContactPosition', 'isErasmus'];
     const updateData = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
-    const start = updateData.startDate ? parseDate(updateData.startDate) : target.startDate;
-    const end = updateData.endDate ? parseDate(updateData.endDate) : target.endDate;
+    const start = updateData.startDate !== undefined ? parseDate(updateData.startDate) : target.startDate;
+    const end = updateData.endDate !== undefined ? parseDate(updateData.endDate) : target.endDate;
     if (!start || !end || end < start ||
         (updateData.durationDays !== undefined && (!Number.isInteger(updateData.durationDays) || updateData.durationDays <= 0))) {
       return res.status(400).json({ error: 'Geçerli tarih ve süre giriniz.' });
@@ -280,7 +286,7 @@ export async function updateInternship(req, res) {
     if (updateData.startDate) updateData.startDate = start;
     if (updateData.endDate) updateData.endDate = end;
     if (req.body.companyName !== undefined) {
-      const name = req.body.companyName?.trim();
+      const name = typeof req.body.companyName === 'string' ? req.body.companyName.trim() : '';
       if (!name || name.toUpperCase() === 'NOT FOUND') return res.status(400).json({ error: 'Kurum adı zorunludur.' });
       const company = await prisma.company.upsert({ where: { name }, update: {}, create: { name } });
       updateData.companyId = company.id;
@@ -443,24 +449,7 @@ async function parseInternshipPdf(dataBuffer) {
  * Convert DD.MM.YYYY to ISO Date
  */
 function parseDate(dateStr) {
-  if (!dateStr) return null;
-  
-  // If already ISO format
-  if (dateStr.includes('-')) {
-    return new Date(dateStr);
-  }
-  
-  // Parse DD.MM.YYYY
-  const parts = dateStr.split('.');
-  if (parts.length !== 3) return null;
-  
-  const day = parseInt(parts[0]);
-  const month = parseInt(parts[1]);
-  const year = parseInt(parts[2]);
-  
-  if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-  
-  return new Date(year, month - 1, day);
+  return calendarDate(dateStr);
 }
 
 /**
