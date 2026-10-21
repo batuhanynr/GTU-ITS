@@ -5,6 +5,13 @@ import './UploadInternshipPDF.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
+const withDocument = (data, file) => {
+    const form = new FormData();
+    form.append('data', JSON.stringify(data));
+    if (file) form.append('file', file);
+    return form;
+};
+
 const UploadInternshipPDF = () => {
     const [terms, setTerms] = useState([]);
     const [selectedTermId, setSelectedTermId] = useState('');
@@ -79,6 +86,7 @@ const UploadInternshipPDF = () => {
                     // Convert parsed data to student format
                     parsedStudents.push({
                         fileName: file.name,
+                        originalFile: file,
                         studentInfo: {
                             name: parsed.studentName,
                             studentNumber: parsed.studentId,
@@ -154,7 +162,7 @@ const UploadInternshipPDF = () => {
 
             const response = await axios.post(
                 `${API_URL}/internship/create`,
-                internshipData,
+                withDocument(internshipData, student.originalFile),
                 { headers: { Authorization: `Bearer ${authService.getToken()}` } }
             );
 
@@ -215,7 +223,7 @@ const UploadInternshipPDF = () => {
 
                     await axios.post(
                         `${API_URL}/internship/create`,
-                        internshipData,
+                        withDocument(internshipData, student.originalFile),
                         { headers: { Authorization: `Bearer ${authService.getToken()}` } }
                     );
 
