@@ -64,6 +64,9 @@ export async function createInternship(req, res) {
     if (!await departmentAccess(req, res, departmentId)) return;
     const existingStudent = await prisma.student.findUnique({ where: { id: studentId } });
     if (existingStudent && !await departmentAccess(req, res, existingStudent.departmentId)) return;
+    if (existingStudent && existingStudent.departmentId !== Number(departmentId)) {
+      return res.status(409).json({ error: 'Belge yükleyerek öğrencinin bölümü değiştirilemez.' });
+    }
 
     console.log('Creating internship:', { studentId, companyName, internshipType });
 
@@ -133,11 +136,11 @@ export async function createInternship(req, res) {
     // Upsert student (create if not exists, update if exists)
     await prisma.student.upsert({
       where: { id: studentId },
+      // Missing PDF fields must not erase existing contact data or change ownership.
       update: {
-        name: studentName,
-        email: studentEmail || `${studentId}@example.com`,
-        phone_number: studentPhone || '',
-        departmentId: parseInt(departmentId)
+        ...(studentName?.trim() && studentName.trim().toUpperCase() !== 'NOT FOUND' ? { name: studentName.trim() } : {}),
+        ...(studentEmail?.trim() && studentEmail.trim().toUpperCase() !== 'NOT FOUND' ? { email: studentEmail.trim() } : {}),
+        ...(studentPhone?.trim() && studentPhone.trim().toUpperCase() !== 'NOT FOUND' ? { phone_number: studentPhone.trim() } : {})
       },
       create: {
         id: studentId,

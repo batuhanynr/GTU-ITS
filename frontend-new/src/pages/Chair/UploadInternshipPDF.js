@@ -92,7 +92,7 @@ const UploadInternshipPDF = () => {
                             studentNumber: parsed.studentId,
                             department: parsed.studentDepartment,
                             phone: parsed.studentPhone || '',
-                            email: parsed.studentEmail || `${parsed.studentId}@gtu.edu.tr`,
+                            email: parsed.studentEmail || '',
                             isErasmus: false
                         },
                         internshipInfo: {
