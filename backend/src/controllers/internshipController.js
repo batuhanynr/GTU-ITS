@@ -172,7 +172,8 @@ export async function createInternship(req, res) {
         grade: null, // Ungraded by default
         gradeComment: null,
         reportUrl: reportUrl || null,
-        documentUrl: documentUrl || null
+        documentUrl: documentUrl || null,
+        ...(req.file ? { originalDocument: { create: { name: req.file.originalname, data: req.file.buffer } } } : {})
       },
       include: {
         student: true,
@@ -777,5 +778,23 @@ export async function generateCommissionReport(req, res) {
       error: 'Rapor oluşturulurken hata oluştu', 
       details: error.message 
     });
+  }
+}
+
+export async function getOriginalDocument(req, res) {
+  try {
+    const internship = await prisma.internship.findUnique({
+      where: { id: Number(req.params.id) }, include: { student: true }
+    });
+    if (!internship) return res.status(404).json({ error: 'Staj bulunamadı.' });
+    if (!await departmentAccess(req, res, internship.student.departmentId)) return;
+    const document = await prisma.internshipDocument.findUnique({ where: { internshipId: internship.id } });
+    if (!document) return res.status(404).json({ error: 'Bu kayıt için orijinal PDF saklanmamış.' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="staj.pdf"; filename*=UTF-8''${encodeURIComponent(document.name)}`);
+    res.setHeader('Cache-Control', 'no-store');
+    return res.send(Buffer.from(document.data));
+  } catch (error) {
+    return res.status(500).json({ error: 'Belge indirilemedi.' });
   }
 }
