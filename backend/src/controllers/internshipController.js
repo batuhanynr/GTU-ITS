@@ -264,19 +264,22 @@ export async function updateInternship(req, res) {
     if (!target) return res.status(404).json({ error: 'Internship not found' });
     if (!await departmentAccess(req, res, target.student.departmentId)) return;
 
-    const updateData = req.body;
-
-    // Don't allow updating certain fields
-    delete updateData.id;
-    delete updateData.studentId;
-    delete updateData.internshipOrder;
-
-    // Convert dates if provided
-    if (updateData.startDate) {
-      updateData.startDate = parseDate(updateData.startDate);
+    // Allow only form corrections; ownership, relations, and grades use separate workflows.
+    const allowed = ['startDate', 'endDate', 'durationDays', 'companyContactName', 'companyContactPosition', 'isErasmus'];
+    const updateData = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
+    const start = updateData.startDate ? parseDate(updateData.startDate) : target.startDate;
+    const end = updateData.endDate ? parseDate(updateData.endDate) : target.endDate;
+    if (!start || !end || end < start ||
+        (updateData.durationDays !== undefined && (!Number.isInteger(updateData.durationDays) || updateData.durationDays <= 0))) {
+      return res.status(400).json({ error: 'Geçerli tarih ve süre giriniz.' });
     }
-    if (updateData.endDate) {
-      updateData.endDate = parseDate(updateData.endDate);
+    if (updateData.startDate) updateData.startDate = start;
+    if (updateData.endDate) updateData.endDate = end;
+    if (req.body.companyName !== undefined) {
+      const name = req.body.companyName?.trim();
+      if (!name || name.toUpperCase() === 'NOT FOUND') return res.status(400).json({ error: 'Kurum adı zorunludur.' });
+      const company = await prisma.company.upsert({ where: { name }, update: {}, create: { name } });
+      updateData.companyId = company.id;
     }
 
     const internship = await prisma.internship.update({
