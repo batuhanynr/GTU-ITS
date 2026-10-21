@@ -2,6 +2,7 @@ import express from 'express';
 import { authenticateToken, requireRole } from '../middlewares/auth.js';
 import {
     getAllTerms,
+    createTerm,
     getStudentsByDepartmentAndTerm,
     getStudentDetails,
     upsertStudent
@@ -12,6 +13,7 @@ router.use(authenticateToken, requireRole(['General Admin', 'Commission Chair', 
 
 // Term routes
 router.get('/terms', getAllTerms);
+router.post('/terms', requireRole(['General Admin', 'Commission Chair']), createTerm);
 
 // Student routes
 router.get('/students/:departmentId/:termId', getStudentsByDepartmentAndTerm);

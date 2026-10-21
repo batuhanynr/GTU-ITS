@@ -1,3 +1,4 @@
+import { calendarDate } from '../utils/calendarDate.js';
 import { departmentAccess } from '../utils/departmentAccess.js';
 import prisma from '../config/prisma.js';
 
@@ -252,3 +253,19 @@ export const upsertStudent = async (req, res) => {
         res.status(500).json({ error: 'Öğrenci kaydedilirken bir hata oluştu.' });
     }
 };
+
+export async function createTerm(req, res) {
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+    const startDate = calendarDate(req.body.startDate);
+    const endDate = calendarDate(req.body.endDate);
+    if (!name || !startDate || !endDate || endDate < startDate) {
+        return res.status(400).json({ error: 'Dönem adı ve geçerli bir tarih aralığı zorunludur.' });
+    }
+    try {
+        const term = await prisma.term.create({ data: { name, startDate, endDate } });
+        return res.status(201).json(term);
+    } catch (error) {
+        if (error.code === 'P2002') return res.status(409).json({ error: 'Bu dönem adı zaten kayıtlı.' });
+        return res.status(500).json({ error: 'Dönem kaydedilemedi.' });
+    }
+}
