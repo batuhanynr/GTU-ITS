@@ -60,3 +60,15 @@ test('admin creation requests must include an explicit role', async () => {
         assert.equal(response.status, 400);
     } finally { server.close(); }
 });
+
+test('account authorization does not intercept unrelated API routes', async () => {
+    const app = express();
+    app.use(userRoutes);
+    app.get('/next-route', (req, res) => res.json({ reached: true }));
+    const server = app.listen(0);
+    try {
+        const response = await fetch(`http://127.0.0.1:${server.address().port}/next-route`);
+        assert.equal(response.status, 200);
+        assert.deepEqual(await response.json(), { reached: true });
+    } finally { server.close(); }
+});
