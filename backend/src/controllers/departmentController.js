@@ -66,21 +66,6 @@ export const createCommissionChair = async (req, res) => {
             return res.status(404).json({ error: 'Commission Chair rolü bulunamadı.' });
         }
 
-        // Check if there's already a chair in this department
-        const existingChair = await prisma.user.findFirst({
-            where: {
-                departmentId: departmentId,
-                roleId: chairRole.id
-            }
-        });
-
-        // If exists, remove them first
-        if (existingChair) {
-            await prisma.user.delete({
-                where: { id: existingChair.id }
-            });
-        }
-
         // Create username from first and last name
         const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
         const fullName = `${firstName} ${lastName}`;
@@ -88,22 +73,27 @@ export const createCommissionChair = async (req, res) => {
         // Hash temporary password
         const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
-        // Create new chair with requiresPasswordChange flag set to true
-        const newChair = await prisma.user.create({
-            data: {
-                name: fullName,
-                username: username,
-                email: email,
-                password: hashedPassword,
-                roleId: chairRole.id,
-                departmentId: departmentId,
-                requiresPasswordChange: true
-            },
-            include: {
-                role: true,
-                department: true
+        // Roll back the deletion if creating the replacement fails.
+        const newChair = await prisma.$transaction(async tx => {
+            const existingChair = await tx.user.findFirst({
+                where: { departmentId, roleId: chairRole.id }
+            });
+            if (existingChair) {
+                await tx.user.delete({ where: { id: existingChair.id } });
             }
-        });
+            return tx.user.create({
+                data: {
+                    name: fullName,
+                    username,
+                    email,
+                    password: hashedPassword,
+                    roleId: chairRole.id,
+                    departmentId,
+                    requiresPasswordChange: true
+                },
+                select: { id: true, name: true, email: true, role: true, department: true }
+            });
+        }, { isolationLevel: 'Serializable' });
 
         res.json({
             message: 'Komisyon başkanı başarıyla oluşturuldu.',
