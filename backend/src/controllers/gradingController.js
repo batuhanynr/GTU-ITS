@@ -1,3 +1,4 @@
+import { departmentAccess } from '../utils/departmentAccess.js';
 import prisma from '../config/prisma.js';
 
 /**
@@ -20,6 +21,12 @@ export async function gradeInternship(req, res) {
     if (!['S', 'U'].includes(grade)) {
       return res.status(400).json({ error: 'Grade must be either "S" or "U"' });
     }
+
+    const target = await prisma.internship.findUnique({
+      where: { studentId_internshipOrder: { studentId, internshipOrder } }, include: { student: true }
+    });
+    if (!target) return res.status(404).json({ error: 'Internship not found' });
+    if (!await departmentAccess(req, res, target.student.departmentId)) return;
 
     // Update the internship with grade and optional comment
     const updatedInternship = await prisma.internship.update({
@@ -111,6 +118,19 @@ export async function bulkGradeInternships(req, res) {
       }
 
       try {
+        const target = await prisma.internship.findUnique({
+          where: { studentId_internshipOrder: { studentId, internshipOrder } }, include: { student: true }
+        });
+        if (!target) {
+          errors.push({ studentId, internshipOrder, error: 'Internship not found' });
+          continue;
+        }
+        let accessError;
+        const accessResponse = { status: () => ({ json: value => { accessError = value.error; } }) };
+        if (!await departmentAccess(req, accessResponse, target.student.departmentId)) {
+          errors.push({ studentId, internshipOrder, error: accessError });
+          continue;
+        }
         const updatedInternship = await prisma.internship.update({
           where: {
             studentId_internshipOrder: {
