@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../../services/api';
 import authService from '../../services/authService';
 import './StudentList.css';
+import OriginalDocument from '../../components/OriginalDocument';
 import InternshipActions from '../../components/InternshipActions';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -238,19 +239,20 @@ const StudentList = () => {
                             <th>Başlangıç Tarihi</th>
                             <th>Bitiş Tarihi</th>
                             <th>Staj Notu</th>
+                            <th>Orijinal PDF</th>
                             <th>İşlemler</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan="8" style={{ textAlign: 'center', padding: '30px' }}>
+                                <td colSpan="9" style={{ textAlign: 'center', padding: '30px' }}>
                                     <i className="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
                                 </td>
                             </tr>
                         ) : students.length === 0 ? (
                             <tr>
-                                <td colSpan="8" style={{ textAlign: 'center', padding: '30px' }}>
+                                <td colSpan="9" style={{ textAlign: 'center', padding: '30px' }}>
                                     <i className="fa-solid fa-circle-info"></i> Seçili filtrelere uygun öğrenci bulunamadı.
                                 </td>
                             </tr>
@@ -281,6 +283,7 @@ const StudentList = () => {
                                                 {getGradeDisplay(student.currentInternship.grade)}
                                             </span>
                                         </td>
+                                        <td><OriginalDocument internship={student.currentInternship} /></td>
                                         <td><InternshipActions internship={student.currentInternship} onSaved={fetchStudents} /></td>
                                     </tr>
                                 );

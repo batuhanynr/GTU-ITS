@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import {
   parsePdf,
+  getOriginalDocument,
   createInternship,
   getInternships,
   updateInternship,
@@ -30,8 +31,18 @@ const upload = multer({
 // Authenticate before accepting document uploads.
 router.post('/internship/parse-pdf', authenticateToken, requireRole(['General Admin', 'Commission Chair', 'Commission Member']), upload.single('file'), parsePdf);
 
+function readUploadData(req, res, next) {
+  if (req.body.data !== undefined) {
+    try { req.body = JSON.parse(req.body.data); }
+    catch { return res.status(400).json({ error: 'Geçersiz kayıt bilgisi.' }); }
+  }
+  next();
+}
+
+router.get('/internship/:id/document', authenticateToken, requireRole(['Commission Chair', 'Commission Member', 'General Admin']), getOriginalDocument);
+
 // Create internship from parsed data (requires authentication)
-router.post('/internship/create', authenticateToken, requireRole(['Commission Chair', 'Commission Member', 'General Admin']), createInternship);
+router.post('/internship/create', authenticateToken, requireRole(['Commission Chair', 'Commission Member', 'General Admin']), upload.single('file'), readUploadData, createInternship);
 
 // Get internships with filters
 router.get('/internships', authenticateToken, getInternships);

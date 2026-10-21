@@ -159,9 +159,18 @@ model Internship {
   reportUrl   String?
   /// Staj fişi PDF'inin URL'si
   documentUrl String?
+  originalDocument InternshipDocument?
   /// Staj için rapor oluşturuldu mu?
   isReported  Boolean @default(false)
 
   /// Veri bütünlüğü için: Bir öğrencinin her staj türünden sadece bir tane olabilir.
   @@unique([studentId, internshipOrder])
+}
+// Store approved source PDFs with their internship so database backups include them.
+model InternshipDocument {
+  id Int @id @default(autoincrement())
+  internshipId Int @unique
+  internship Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  name String
+  data Bytes
 }

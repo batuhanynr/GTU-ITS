@@ -56,6 +56,7 @@ export const getStudentsByDepartmentAndTerm = async (req, res) => {
                 internships: {
                     where: internshipWhere, // Apply the same filter here too
                     include: {
+                        originalDocument: { select: { id: true } },
                         company: {
                             select: {
                                 name: true
@@ -132,7 +133,8 @@ export const getStudentsByDepartmentAndTerm = async (req, res) => {
                         durationDays: currentInternship.durationDays,
                         isErasmus: currentInternship.isErasmus,
                         reportUrl: currentInternship.reportUrl,
-                        documentUrl: currentInternship.documentUrl
+                        documentUrl: currentInternship.documentUrl,
+                        hasOriginalDocument: Boolean(currentInternship.originalDocument)
                     },
                     previousInternship: previousInternship ? {
                         id: previousInternship.id,
