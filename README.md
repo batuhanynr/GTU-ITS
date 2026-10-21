@@ -137,8 +137,8 @@ JWT_EXPIRE=7d
 # Frontend URL (for CORS)
 CLIENT_URL=http://localhost:3000
 
-# Email (OPTIONAL) - leave blank for local demos. When blank, the password-reset
-# code is printed to the backend console instead of being emailed.
+# Email (OPTIONAL) - password reset is unavailable when these are blank.
+# Use a Gmail App Password to enable email delivery.
 EMAIL_USER=
 EMAIL_PASS=
 ```
