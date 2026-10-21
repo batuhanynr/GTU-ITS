@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import authService from '../../services/authService';
-import axios from 'axios';
+import axios from '../../services/api';
 import './ChangePassword.css';
 
 const ChangePassword = () => {
