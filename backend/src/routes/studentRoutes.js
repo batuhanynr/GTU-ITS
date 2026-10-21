@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticateToken, requireRole } from '../middlewares/auth.js';
 import {
     getAllTerms,
     getStudentsByDepartmentAndTerm,
@@ -7,6 +8,7 @@ import {
 } from '../controllers/studentController.js';
 
 const router = express.Router();
+router.use(authenticateToken, requireRole(['General Admin', 'Commission Chair', 'Commission Member']));
 
 // Term routes
 router.get('/terms', getAllTerms);

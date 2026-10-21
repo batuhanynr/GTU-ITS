@@ -16,18 +16,12 @@ export const createUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        // If roleId is not provided, find the "General Admin" role
-        let finalRoleId = roleId;
-        if (!finalRoleId) {
-            const defaultRole = await prisma.role.findUnique({
-                where: { name: 'General Admin' }
-            });
-            finalRoleId = defaultRole?.id;
+        // Require an explicit role so missing input cannot create an admin.
+        const role = roleId && await prisma.role.findUnique({ where: { id: Number(roleId) } });
+        if (!role) {
+            return res.status(400).json({ error: 'Geçerli bir rol seçilmelidir.' });
         }
-
-        if (!finalRoleId) {
-            return res.status(400).json({ error: 'Geçerli bir rol bulunamadı.' });
-        }
+        const finalRoleId = role.id;
 
         const newUser = await prisma.user.create({
             data: {
@@ -43,7 +37,8 @@ export const createUser = async (req, res) => {
             }
         });
         
-        res.json(newUser);
+        const { password: ignoredPassword, ...safeUser } = newUser;
+        res.json(safeUser);
 
     } catch (error) {
         console.error(error);
