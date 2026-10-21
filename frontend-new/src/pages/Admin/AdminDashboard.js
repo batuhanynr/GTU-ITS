@@ -20,6 +20,12 @@ const AdminDashboard = () => {
 
         // Get user data
         const userData = authService.getCurrentUser();
+        // Restrict the admin screen before rendering any management controls.
+        if (userData?.role?.name !== 'General Admin') {
+            navigate(userData?.role?.name === 'Commission Chair' ? '/chair-dashboard' :
+                userData?.role?.name === 'Commission Member' ? '/member-dashboard' : '/', { replace: true });
+            return;
+        }
         setUser(userData);
     }, [navigate]);
 

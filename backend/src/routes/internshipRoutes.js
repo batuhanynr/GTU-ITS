@@ -28,8 +28,8 @@ const upload = multer({
   }
 });
 
-// Parse PDF file (no auth required for testing, can add auth later)
-router.post('/internship/parse-pdf', upload.single('file'), parsePdf);
+// Authenticate before accepting document uploads.
+router.post('/internship/parse-pdf', authenticateToken, requireRole(['General Admin', 'Commission Chair', 'Commission Member']), upload.single('file'), parsePdf);
 
 function readUploadData(req, res, next) {
   if (req.body.data !== undefined) {
