@@ -30,6 +30,7 @@ export const requireRole = (allowedRoles) => {
                 return res.status(403).json({ error: 'Bu işlem için yetkiniz yok.' });
             }
 
+            req.account = user;
             next();
         } catch (error) {
             res.status(500).json({ error: 'Yetki kontrolü yapılırken bir hata oluştu.' });

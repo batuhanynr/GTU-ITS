@@ -27,8 +27,8 @@ const upload = multer({
   }
 });
 
-// Parse PDF file (no auth required for testing, can add auth later)
-router.post('/internship/parse-pdf', upload.single('file'), parsePdf);
+// Authenticate before accepting document uploads.
+router.post('/internship/parse-pdf', authenticateToken, requireRole(['General Admin', 'Commission Chair', 'Commission Member']), upload.single('file'), parsePdf);
 
 // Create internship from parsed data (requires authentication)
 router.post('/internship/create', authenticateToken, requireRole(['Commission Chair', 'Commission Member', 'General Admin']), createInternship);
