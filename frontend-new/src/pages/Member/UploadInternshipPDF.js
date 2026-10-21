@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../../services/api';
 import authService from '../../services/authService';
 import './UploadInternshipPDF.css';
+import { validateUploadStudent } from '../../utils/validateUploadStudent';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -140,6 +141,9 @@ const UploadInternshipPDF = () => {
                 throw new Error('Kullanıcı bölümü bulunamadı.');
             }
 
+            const validationError = validateUploadStudent(student);
+            if (validationError) throw new Error(validationError);
+
             // Prepare internship data
             const internshipData = {
                 studentId: student.studentInfo.studentNumber,
@@ -151,7 +155,7 @@ const UploadInternshipPDF = () => {
                 contactPosition: student.internshipInfo.contactPosition || null,
                 startDate: student.internshipInfo.startDate,
                 endDate: student.internshipInfo.endDate,
-                duration: student.internshipInfo.duration || 20,
+                duration: student.internshipInfo.duration ?? 20,
                 internshipType: student.internshipInfo.type, // Already STAJ1 or STAJ2 from dropdown
                 termId: selectedTermId,
                 departmentId: user.department.id,
@@ -205,6 +209,8 @@ const UploadInternshipPDF = () => {
                 const student = studentsData[i];
                 
                 try {
+                    const validationError = validateUploadStudent(student);
+                    if (validationError) throw new Error(validationError);
                     const internshipData = {
                         studentId: student.studentInfo.studentNumber,
                         studentName: student.studentInfo.name,
@@ -215,7 +221,7 @@ const UploadInternshipPDF = () => {
                         contactPosition: student.internshipInfo.contactPosition || null,
                         startDate: student.internshipInfo.startDate,
                         endDate: student.internshipInfo.endDate,
-                        duration: student.internshipInfo.duration || 20,
+                        duration: student.internshipInfo.duration ?? 20,
                         internshipType: student.internshipInfo.type,
                         termId: selectedTermId,
                         departmentId: user.department.id,
@@ -522,6 +528,11 @@ const UploadInternshipPDF = () => {
                                     value={currentStudent.internshipInfo.endDate}
                                     onChange={(e) => handleInputChange('endDate', e.target.value, 'internshipInfo')}
                                 />
+                            </div>
+                            <div className="compact-form-group">
+                                <label htmlFor="internship-duration">Staj Süresi (İş Günü)</label>
+                                <input id="internship-duration" type="number" min="1" value={currentStudent.internshipInfo.duration ?? ''}
+                                    onChange={e => handleInputChange('duration', e.target.value, 'internshipInfo')} />
                             </div>
                             <div className="compact-form-group">
                                 <label>Kurum Adı</label>
