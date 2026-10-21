@@ -1,3 +1,4 @@
+import { departmentAccess } from '../utils/departmentAccess.js';
 import prisma from '../config/prisma.js';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
@@ -59,6 +60,10 @@ export async function createInternship(req, res) {
       reportUrl,
       documentUrl
     } = req.body;
+
+    if (!await departmentAccess(req, res, departmentId)) return;
+    const existingStudent = await prisma.student.findUnique({ where: { id: studentId } });
+    if (existingStudent && !await departmentAccess(req, res, existingStudent.departmentId)) return;
 
     console.log('Creating internship:', { studentId, companyName, internshipType });
 
@@ -208,15 +213,18 @@ export async function getInternships(req, res) {
   try {
     const { studentId, termId, departmentId, internshipType, status } = req.query;
 
+    const account = await prisma.user.findUnique({ where: { id: req.user.userId }, include: { role: true } });
+    const effectiveDepartment = account?.role?.name === 'General Admin' ? departmentId : account?.departmentId;
+    if (!await departmentAccess(req, res, effectiveDepartment)) return;
     const where = {};
     
     if (studentId) where.studentId = studentId;
     if (termId) where.termId = parseInt(termId);
     if (internshipType) where.internshipOrder = internshipType;
     if (status) where.status = status;
-    if (departmentId) {
+    if (effectiveDepartment) {
       where.student = {
-        departmentId: parseInt(departmentId)
+        departmentId: parseInt(effectiveDepartment)
       };
     }
 
@@ -252,6 +260,10 @@ export async function getInternships(req, res) {
 export async function updateInternship(req, res) {
   try {
     const { id } = req.params;
+    const target = await prisma.internship.findUnique({ where: { id: Number(id) }, include: { student: true } });
+    if (!target) return res.status(404).json({ error: 'Internship not found' });
+    if (!await departmentAccess(req, res, target.student.departmentId)) return;
+
     const updateData = req.body;
 
     // Don't allow updating certain fields
@@ -302,6 +314,10 @@ export async function updateInternship(req, res) {
 export async function deleteInternship(req, res) {
   try {
     const { id } = req.params;
+
+    const target = await prisma.internship.findUnique({ where: { id: Number(id) }, include: { student: true } });
+    if (!target) return res.status(404).json({ error: 'Internship not found' });
+    if (!await departmentAccess(req, res, target.student.departmentId)) return;
 
     await prisma.internship.delete({
       where: { id: parseInt(id) }
@@ -470,6 +486,8 @@ export async function generateCommissionReport(req, res) {
     if (!department) {
       return res.status(404).json({ error: 'Bölüm bulunamadı.' });
     }
+
+    if (!await departmentAccess(req, res, departmentId)) return;
 
     // Build filters for internships
     const whereClause = {

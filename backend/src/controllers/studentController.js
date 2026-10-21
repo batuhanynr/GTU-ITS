@@ -1,3 +1,4 @@
+import { departmentAccess } from '../utils/departmentAccess.js';
 import prisma from '../config/prisma.js';
 
 // Get all terms
@@ -26,6 +27,8 @@ export const getStudentsByDepartmentAndTerm = async (req, res) => {
     try {
         const { departmentId, termId } = req.params;
         const { gradeFilter, studentTypeFilter } = req.query;
+
+        if (!await departmentAccess(req, res, departmentId)) return;
 
         // Build where clause for internship filtering
         let internshipWhere = {
@@ -195,6 +198,7 @@ export const getStudentDetails = async (req, res) => {
             return res.status(404).json({ error: 'Öğrenci bulunamadı.' });
         }
 
+        if (!await departmentAccess(req, res, student.departmentId)) return;
         res.json(student);
     } catch (error) {
         console.error(error);
@@ -211,6 +215,9 @@ export const upsertStudent = async (req, res) => {
             return res.status(400).json({ error: 'Gerekli alanlar eksik.' });
         }
 
+        if (!await departmentAccess(req, res, departmentId)) return;
+        const existing = await prisma.student.findUnique({ where: { id } });
+        if (existing && !await departmentAccess(req, res, existing.departmentId)) return;
         const student = await prisma.student.upsert({
             where: { id },
             update: {
