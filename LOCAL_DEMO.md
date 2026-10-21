@@ -174,8 +174,8 @@ Other seeded staff (all `password123`): `eeng_chair@example.com`,
 
 ## 8. Full showcase script
 
-A ~10-minute path that touches every feature. Keep the **backend terminal
-visible** — one step reads a code from it.
+A ~10-minute path through the main features. Password reset requires a working
+mail configuration and access to the demo account mailbox.
 
 ### Act 1 — Admin (`admin1@example.com`)
 
