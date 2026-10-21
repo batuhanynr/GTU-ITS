@@ -309,16 +309,28 @@ const UploadInternshipPDF = () => {
         setError(null);
     };
 
-    const handleAddTerm = () => {
+    const handleAddTerm = async () => {
         if (!newTerm.name || !newTerm.startDate || !newTerm.endDate) {
             showToast('Lütfen tüm alanları doldurun!', 'warning');
             return;
         }
-        console.log('Yeni dönem eklendi:', newTerm);
-        // TODO: Backend'e gönderilecek
-        setShowAddTermModal(false);
-        setNewTerm({ name: '', startDate: '', endDate: '' });
-        showToast('Dönem başarıyla eklendi!', 'success');
+        if (newTerm.endDate < newTerm.startDate) {
+            showToast('Bitiş tarihi başlangıçtan önce olamaz.', 'warning');
+            return;
+        }
+        setLoading(true);
+        try {
+            const response = await axios.post(`${API_URL}/terms`, newTerm,
+                { headers: { Authorization: `Bearer ${authService.getToken()}` } });
+            // Select the persisted term only after the server confirms creation.
+            setTerms(previous => [response.data, ...previous]);
+            setSelectedTermId(response.data.id);
+            setShowAddTermModal(false);
+            setNewTerm({ name: '', startDate: '', endDate: '' });
+            showToast('Dönem başarıyla eklendi!', 'success');
+        } catch (err) {
+            showToast(err.response?.data?.error || 'Dönem kaydedilemedi.', 'error');
+        } finally { setLoading(false); }
     };
 
     const formatDateForInput = (dateStr) => {
@@ -370,9 +382,9 @@ const UploadInternshipPDF = () => {
                                         <option key={term.id} value={term.id}>{term.name}</option>
                                     ))}
                                 </select>
-                                <button className="btn-add-term" onClick={() => setShowAddTermModal(true)}>
+                                {['General Admin', 'Commission Chair'].includes(authService.getCurrentUser()?.role?.name) && <button className="btn-add-term" onClick={() => setShowAddTermModal(true)}>
                                     <i className="fa-solid fa-plus"></i> Dönem Ekle
-                                </button>
+                                </button>}
                             </div>
                         </div>
                         
@@ -631,9 +643,10 @@ const UploadInternshipPDF = () => {
                         
                         <div className="modal-body">
                             <div className="modal-form-group">
-                                <label>Dönem Adı:</label>
+                                <label htmlFor="new-term-name">Dönem Adı:</label>
                                 <input 
                                     type="text" 
+                                    id="new-term-name"
                                     placeholder="Örn: 2025-2026 Güz"
                                     value={newTerm.name}
                                     onChange={(e) => setNewTerm({...newTerm, name: e.target.value})}
@@ -641,18 +654,20 @@ const UploadInternshipPDF = () => {
                             </div>
                             
                             <div className="modal-form-group">
-                                <label>Başlangıç Tarihi:</label>
+                                <label htmlFor="new-term-start">Başlangıç Tarihi:</label>
                                 <input 
                                     type="date"
+                                    id="new-term-start"
                                     value={newTerm.startDate}
                                     onChange={(e) => setNewTerm({...newTerm, startDate: e.target.value})}
                                 />
                             </div>
                             
                             <div className="modal-form-group">
-                                <label>Bitiş Tarihi:</label>
+                                <label htmlFor="new-term-end">Bitiş Tarihi:</label>
                                 <input 
                                     type="date"
+                                    id="new-term-end"
                                     value={newTerm.endDate}
                                     onChange={(e) => setNewTerm({...newTerm, endDate: e.target.value})}
                                 />
@@ -663,7 +678,7 @@ const UploadInternshipPDF = () => {
                             <button className="btn-modal-cancel" onClick={() => setShowAddTermModal(false)}>
                                 İptal
                             </button>
-                            <button className="btn-modal-confirm" onClick={handleAddTerm}>
+                            <button className="btn-modal-confirm" disabled={loading} onClick={handleAddTerm}>
                                 <i className="fa-solid fa-plus"></i> Dönem Ekle
                             </button>
                         </div>
