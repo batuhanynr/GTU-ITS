@@ -103,7 +103,7 @@ const StudentList = () => {
         return '-';
     };
 
-    const handleGenerateReport = async () => {
+    const handleGenerateReport = async (includeReported = false) => {
         try {
             const user = authService.getCurrentUser();
             if (!user || !user.department) {
@@ -121,7 +121,9 @@ const StudentList = () => {
                     termId: parseInt(selectedTerm),
                     departmentId: user.department.id,
                     gradeFilter: gradeFilter === 'all' ? null : gradeFilter,
-                    studentTypeFilter: studentTypeFilter === 'all' ? null : studentTypeFilter
+                    studentTypeFilter: studentTypeFilter === 'all' ? null : studentTypeFilter,
+                    // When regenerating, include already-reported internships too.
+                    includeReported
                 },
                 {
                     headers: {
@@ -293,13 +295,22 @@ const StudentList = () => {
                 </table>
                 
                 <div className="table-footer">
-                    <button 
+                    <button
                         className="btn-generate-report"
-                        onClick={handleGenerateReport}
+                        onClick={() => handleGenerateReport(false)}
                         disabled={loading || students.length === 0}
                     >
-                        <i className="fa-solid fa-file-signature"></i> 
+                        <i className="fa-solid fa-file-signature"></i>
                         Komisyon Değerlendirme Tutanağı Oluştur
+                    </button>
+                    {/* Regenerate includes already-reported internships, e.g. after a lost file or grade fix. */}
+                    <button
+                        className="btn-generate-report"
+                        onClick={() => handleGenerateReport(true)}
+                        disabled={loading || students.length === 0}
+                    >
+                        <i className="fa-solid fa-rotate-right"></i>
+                        Tutanağı Yeniden Oluştur
                     </button>
                 </div>
             </div>
