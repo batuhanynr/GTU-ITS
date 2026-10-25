@@ -127,13 +127,18 @@ const MAX_RESET_ATTEMPTS = 5;
 // Look up the active code for an email and enforce the attempt limit on a wrong code.
 // Returns { error, status } on failure, or { record } on success.
 async function checkResetCode(email, code) {
+    // Reject missing filters before Prisma can query or update another account's token.
+    if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+        typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+        return { status: 400, error: 'Geçerli e-posta adresi ve altı haneli kod gereklidir.' };
+    }
     const record = await prisma.passwordResetToken.findFirst({
         where: { email, expiresAt: { gt: new Date() } },
         orderBy: { createdAt: 'desc' }
     });
     if (!record) return { status: 400, error: 'Geçersiz veya süresi dolmuş kod.' };
     if (record.attempts >= MAX_RESET_ATTEMPTS) {
-        await prisma.passwordResetToken.deleteMany({ where: { email } });
+        await prisma.passwordResetToken.deleteMany({ where: { id: record.id } });
         return { status: 429, error: 'Çok fazla hatalı deneme. Lütfen yeni kod isteyin.' };
     }
     if (record.token !== code) {
@@ -147,7 +152,7 @@ async function checkResetCode(email, code) {
 // 2. Step: Verify Code
 export const verifyResetCode = async (req, res) => {
     try {
-        const { email, code } = req.body;
+        const { email, code } = req.body || {};
 
         const result = await checkResetCode(email, code);
         if (result.error) {
@@ -165,7 +170,7 @@ export const verifyResetCode = async (req, res) => {
 // 3. Step: Set New Password
 export const resetPasswordWithCode = async (req, res) => {
     try {
-        const { email, code, newPassword } = req.body;
+        const { email, code, newPassword } = req.body || {};
 
         // Enforce a minimum password length (matches the client rule).
         if (typeof newPassword !== 'string' || newPassword.length < 6) {
