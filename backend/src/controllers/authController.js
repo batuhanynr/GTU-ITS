@@ -151,6 +151,11 @@ export const resetPasswordWithCode = async (req, res) => {
     try {
         const { email, code, newPassword } = req.body;
 
+        // Enforce a minimum password length (matches the client rule).
+        if (typeof newPassword !== 'string' || newPassword.length < 6) {
+            return res.status(400).json({ error: 'Şifre en az 6 karakter olmalıdır.' });
+        }
+
         // Verify again securely
         const record = await prisma.passwordResetToken.findFirst({
             where: {
@@ -197,6 +202,11 @@ export const changePassword = async (req, res) => {
 
         if (!currentPassword || !newPassword) {
             return res.status(400).json({ error: 'Tüm alanlar zorunludur.' });
+        }
+
+        // Enforce a minimum password length (matches the client rule).
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'Şifre en az 6 karakter olmalıdır.' });
         }
 
         // Identify the user from the authenticated token, not the request body.
