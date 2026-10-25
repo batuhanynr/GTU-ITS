@@ -127,56 +127,60 @@ export async function createInternship(req, res) {
       });
     }
 
-    // Upsert student (create if not exists, update if exists)
-    await prisma.student.upsert({
-      where: { id: studentId },
-      // Missing PDF fields must not erase existing contact data or change ownership.
-      update: {
-        ...(studentName?.trim() && studentName.trim().toUpperCase() !== 'NOT FOUND' ? { name: studentName.trim() } : {}),
-        ...(studentEmail?.trim() && studentEmail.trim().toUpperCase() !== 'NOT FOUND' ? { email: studentEmail.trim() } : {}),
-        ...(studentPhone?.trim() && studentPhone.trim().toUpperCase() !== 'NOT FOUND' ? { phone_number: studentPhone.trim() } : {})
-      },
-      create: {
-        id: studentId,
-        name: studentName,
-        email: studentEmail || `${studentId}@example.com`,
-        phone_number: studentPhone || '',
-        departmentId: parseInt(departmentId)
-      }
-    });
+    // Keep student and company changes only when the internship is saved.
+    const internship = await prisma.$transaction(async tx => {
+      // Upsert student (create if not exists, update if exists)
+      await tx.student.upsert({
+        where: { id: studentId },
+        // Missing PDF fields must not erase existing contact data or change ownership.
+        update: {
+          ...(studentName?.trim() && studentName.trim().toUpperCase() !== 'NOT FOUND' ? { name: studentName.trim() } : {}),
+          ...(studentEmail?.trim() && studentEmail.trim().toUpperCase() !== 'NOT FOUND' ? { email: studentEmail.trim() } : {}),
+          ...(studentPhone?.trim() && studentPhone.trim().toUpperCase() !== 'NOT FOUND' ? { phone_number: studentPhone.trim() } : {})
+        },
+        create: {
+          id: studentId,
+          name: studentName,
+          email: studentEmail || `${studentId}@example.com`,
+          phone_number: studentPhone || '',
+          departmentId: parseInt(departmentId)
+        }
+      });
 
-    // Upsert company (create if not exists)
-    const company = await prisma.company.upsert({
-      where: { name: companyName },
-      update: {},
-      create: { name: companyName }
-    });
+      // Upsert company (create if not exists)
+      const company = await tx.company.upsert({
+        where: { name: companyName },
+        update: {},
+        create: { name: companyName }
+      });
 
-    // Create internship
-    const internship = await prisma.internship.create({
-      data: {
-        studentId,
-        companyId: company.id,
-        termId: parseInt(termId),
-        status: 'IN_PROGRESS',
-        internshipOrder: internshipType,
-        durationDays: parsedDuration,
-        isErasmus: isErasmus === true || isErasmus === 'true',
-        companyContactName: contactName || null,
-        companyContactPosition: contactPosition || null,
-        startDate: parsedStartDate,
-        endDate: parsedEndDate,
-        grade: null, // Ungraded by default
-        gradeComment: null,
-        reportUrl: reportUrl || null,
-        documentUrl: documentUrl || null,
-        ...(req.file ? { originalDocument: { create: { name: req.file.originalname, data: req.file.buffer } } } : {})
-      },
-      include: {
-        student: true,
-        company: true,
-        term: true
-      }
+      // Create internship
+      return tx.internship.create({
+        data: {
+          studentId,
+          companyId: company.id,
+          termId: parseInt(termId),
+          status: 'IN_PROGRESS',
+          internshipOrder: internshipType,
+          durationDays: parsedDuration,
+          isErasmus: isErasmus === true || isErasmus === 'true',
+          companyContactName: contactName || null,
+          companyContactPosition: contactPosition || null,
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+          grade: null, // Ungraded by default
+          gradeComment: null,
+          reportUrl: reportUrl || null,
+          documentUrl: documentUrl || null,
+          ...(req.file ? { originalDocument: { create: { name: req.file.originalname, data: req.file.buffer } } } : {})
+        },
+        include: {
+          student: true,
+          company: true,
+          term: true
+        }
+      });
+
     });
 
     console.log('Internship created successfully:', internship.id);

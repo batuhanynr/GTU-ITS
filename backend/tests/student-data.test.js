@@ -4,6 +4,10 @@ import prisma from '../src/config/prisma.js';
 import { createInternship } from '../src/controllers/internshipController.js';
 
 test('missing contact fields preserve existing data and uploads cannot move students', async () => {
+    const originalTransaction = prisma.$transaction;
+    const originalFindFirst = prisma.internship.findFirst;
+    prisma.$transaction = async work => work(prisma);
+    prisma.internship.findFirst = async () => null;
     const originals = [prisma.user.findUnique, prisma.student.findUnique, prisma.student.upsert, prisma.company.upsert, prisma.internship.findUnique, prisma.internship.create];
     let student = { id: '123', name: 'Student', email: 'real@example.org', phone_number: '555', departmentId: 1 };
     let updates = 0;
@@ -23,5 +27,5 @@ test('missing contact fields preserve existing data and uploads cannot move stud
         assert.equal(student.email, 'updated@example.org'); assert.equal(student.phone_number, '777');
         await createInternship({ user: { userId: 1 }, body: { ...body, departmentId: 2 } }, res);
         assert.equal(res.statusCode, 409); assert.equal(student.departmentId, 1); assert.equal(updates, 2);
-    } finally { [prisma.user.findUnique, prisma.student.findUnique, prisma.student.upsert, prisma.company.upsert, prisma.internship.findUnique, prisma.internship.create] = originals; }
+    } finally { prisma.$transaction = originalTransaction; prisma.internship.findFirst = originalFindFirst; [prisma.user.findUnique, prisma.student.findUnique, prisma.student.upsert, prisma.company.upsert, prisma.internship.findUnique, prisma.internship.create] = originals; }
 });
