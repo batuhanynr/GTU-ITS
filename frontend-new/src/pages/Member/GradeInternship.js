@@ -17,6 +17,8 @@ const GradeInternship = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
+    // Tracks unsaved grade/note edits so we can warn before they are discarded.
+    const [isDirty, setIsDirty] = useState(false);
 
     // Toast notification helper
     const showToast = (message, type = 'info') => {
@@ -82,6 +84,7 @@ const GradeInternship = () => {
                 });
                 setStudentGrades(grades);
                 setStudentNotes(notes);
+                setIsDirty(false); // freshly loaded data is not dirty
             } catch (err) {
                 console.error('Error fetching students:', err);
                 setError('Failed to load students');
@@ -111,6 +114,7 @@ const GradeInternship = () => {
             ...prev,
             [internshipId]: grade
         }));
+        setIsDirty(true);
     };
 
     const handleNoteChange = (internshipId, note) => {
@@ -118,14 +122,19 @@ const GradeInternship = () => {
             ...prev,
             [internshipId]: note
         }));
+        setIsDirty(true);
     };
+
+    // Warn before an action that would reload the list and discard unsaved edits.
+    const confirmDiscardIfDirty = () =>
+        !isDirty || window.confirm('Kaydedilmemiş notlar var. Devam ederseniz kaybolacak. Devam edilsin mi?');
 
     const handleSaveGrades = async () => {
         try {
-            // Collect all modified grades
+            // Collect all modified grades from the full loaded list, not just search-visible rows.
             const gradesToSubmit = [];
-            
-            filteredStudents.forEach(student => {
+
+            students.forEach(student => {
                 const internshipId = student.currentInternship?.id;
                 if (!internshipId) return;
 
@@ -167,8 +176,18 @@ const GradeInternship = () => {
 
             console.log('Grade submission response:', response.data);
 
-            showToast(`${response.data.successCount} öğrencinin notu başarıyla kaydedildi!`, 'success');
-            
+            const { successCount, errorCount, errors } = response.data;
+            if (errorCount > 0) {
+                // Name the records that failed so they are not silently dropped.
+                const failed = errors.map(e => {
+                    const s = students.find(st => st.currentInternship?.id === e.internshipId);
+                    return s ? `${s.name} (${s.id})` : (e.studentId || e.internshipId);
+                }).join(', ');
+                showToast(`${successCount} not kaydedildi, ${errorCount} kaydedilemedi: ${failed}`, 'warning');
+            } else {
+                showToast(`${successCount} öğrencinin notu başarıyla kaydedildi!`, 'success');
+            }
+
             // Refresh the student list
             const user = authService.getCurrentUser();
             const queryParams = new URLSearchParams();
@@ -182,6 +201,24 @@ const GradeInternship = () => {
                 `${API_URL}/students/${user.department.id}/${selectedTermId}?${queryParams.toString()}`
             );
             setStudents(refreshResponse.data);
+
+            // Keep pending edits for rows that failed so they can be retried; clear saved rows.
+            const failedIds = new Set((errors || []).map(e => e.internshipId));
+            const grades = {}, notes = {};
+            refreshResponse.data.forEach(student => {
+                const id = student.currentInternship?.id;
+                if (!id) return;
+                if (failedIds.has(id)) {
+                    if (studentGrades[id] !== undefined) grades[id] = studentGrades[id];
+                    if (studentNotes[id] !== undefined) notes[id] = studentNotes[id];
+                } else {
+                    if (student.currentInternship.grade) grades[id] = student.currentInternship.grade;
+                    if (student.currentInternship.gradeComment) notes[id] = student.currentInternship.gradeComment;
+                }
+            });
+            setStudentGrades(grades);
+            setStudentNotes(notes);
+            setIsDirty(errorCount > 0); // remaining failed edits are still unsaved
         } catch (err) {
             console.error('Full error object:', err);
             console.error('Error response:', err.response);
@@ -259,7 +296,7 @@ const GradeInternship = () => {
                         <select 
                             id="term-select"
                             value={selectedTermId}
-                            onChange={(e) => setSelectedTermId(parseInt(e.target.value))}
+                            onChange={(e) => { const v = parseInt(e.target.value); if (confirmDiscardIfDirty()) setSelectedTermId(v); }}
                             disabled={loading}
                         >
                             {terms.map(term => (
@@ -273,7 +310,7 @@ const GradeInternship = () => {
                         <select 
                             id="grade-filter"
                             value={gradeFilter}
-                            onChange={(e) => setGradeFilter(e.target.value)}
+                            onChange={(e) => { const v = e.target.value; if (confirmDiscardIfDirty()) setGradeFilter(v); }}
                             disabled={loading}
                         >
                             <option value="all">Tümü</option>
@@ -288,7 +325,7 @@ const GradeInternship = () => {
                         <select 
                             id="type-filter"
                             value={studentTypeFilter}
-                            onChange={(e) => setStudentTypeFilter(e.target.value)}
+                            onChange={(e) => { const v = e.target.value; if (confirmDiscardIfDirty()) setStudentTypeFilter(v); }}
                             disabled={loading}
                         >
                             <option value="all">Tümü</option>

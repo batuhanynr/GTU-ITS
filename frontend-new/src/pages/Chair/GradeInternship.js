@@ -201,7 +201,24 @@ const GradeInternship = () => {
                 `${API_URL}/students/${user.department.id}/${selectedTermId}?${queryParams.toString()}`
             );
             setStudents(refreshResponse.data);
-            setIsDirty(false); // changes are persisted now
+
+            // Keep pending edits for rows that failed so they can be retried; clear saved rows.
+            const failedIds = new Set((errors || []).map(e => e.internshipId));
+            const grades = {}, notes = {};
+            refreshResponse.data.forEach(student => {
+                const id = student.currentInternship?.id;
+                if (!id) return;
+                if (failedIds.has(id)) {
+                    if (studentGrades[id] !== undefined) grades[id] = studentGrades[id];
+                    if (studentNotes[id] !== undefined) notes[id] = studentNotes[id];
+                } else {
+                    if (student.currentInternship.grade) grades[id] = student.currentInternship.grade;
+                    if (student.currentInternship.gradeComment) notes[id] = student.currentInternship.gradeComment;
+                }
+            });
+            setStudentGrades(grades);
+            setStudentNotes(notes);
+            setIsDirty(errorCount > 0); // remaining failed edits are still unsaved
         } catch (err) {
             console.error('Full error object:', err);
             console.error('Error response:', err.response);
