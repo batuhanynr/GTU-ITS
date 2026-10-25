@@ -111,11 +111,18 @@ export const createCommissionChair = async (req, res) => {
 
 export const removeCommissionChair = async (req, res) => {
     try {
-        const userId = parseInt(req.params.userId);
+        const userId = Number(req.params.userId);
+        if (!Number.isInteger(userId) || userId < 1 || userId > 2147483647) {
+            return res.status(404).json({ error: 'Komisyon başkanı bulunamadı.' });
+        }
 
-        await prisma.user.delete({
-            where: { id: userId }
+        // Apply the role condition to the deletion itself so another account type cannot be removed.
+        const removed = await prisma.user.deleteMany({
+            where: { id: userId, role: { name: 'Commission Chair' } }
         });
+        if (removed.count !== 1) {
+            return res.status(404).json({ error: 'Komisyon başkanı bulunamadı.' });
+        }
 
         res.json({ message: 'Komisyon başkanı başarıyla kaldırıldı.' });
 
