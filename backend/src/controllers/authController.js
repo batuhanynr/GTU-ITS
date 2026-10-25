@@ -121,21 +121,37 @@ export const forgotPassword = async (req, res) => {
     }
 };
 
+// Max wrong-code attempts before the reset code is locked and must be re-requested.
+const MAX_RESET_ATTEMPTS = 5;
+
+// Look up the active code for an email and enforce the attempt limit on a wrong code.
+// Returns { error, status } on failure, or { record } on success.
+async function checkResetCode(email, code) {
+    const record = await prisma.passwordResetToken.findFirst({
+        where: { email, expiresAt: { gt: new Date() } },
+        orderBy: { createdAt: 'desc' }
+    });
+    if (!record) return { status: 400, error: 'Geçersiz veya süresi dolmuş kod.' };
+    if (record.attempts >= MAX_RESET_ATTEMPTS) {
+        await prisma.passwordResetToken.deleteMany({ where: { email } });
+        return { status: 429, error: 'Çok fazla hatalı deneme. Lütfen yeni kod isteyin.' };
+    }
+    if (record.token !== code) {
+        // Count the wrong try so the code can be locked after too many attempts.
+        await prisma.passwordResetToken.update({ where: { id: record.id }, data: { attempts: { increment: 1 } } });
+        return { status: 400, error: 'Geçersiz veya süresi dolmuş kod.' };
+    }
+    return { record };
+}
+
 // 2. Step: Verify Code
 export const verifyResetCode = async (req, res) => {
     try {
         const { email, code } = req.body;
 
-        const record = await prisma.passwordResetToken.findFirst({
-            where: {
-                email,
-                token: code,
-                expiresAt: { gt: new Date() } // Must not be expired
-            }
-        });
-
-        if (!record) {
-            return res.status(400).json({ error: 'Geçersiz veya süresi dolmuş kod.' });
+        const result = await checkResetCode(email, code);
+        if (result.error) {
+            return res.status(result.status).json({ error: result.error });
         }
 
         res.json({ message: 'Kod doğrulandı.', valid: true });
@@ -156,17 +172,10 @@ export const resetPasswordWithCode = async (req, res) => {
             return res.status(400).json({ error: 'Şifre en az 6 karakter olmalıdır.' });
         }
 
-        // Verify again securely
-        const record = await prisma.passwordResetToken.findFirst({
-            where: {
-                email,
-                token: code,
-                expiresAt: { gt: new Date() }
-            }
-        });
-
-        if (!record) {
-            return res.status(400).json({ error: 'Geçersiz veya süresi dolmuş işlem.' });
+        // Verify the code again, applying the same attempt limit as the verify step.
+        const result = await checkResetCode(email, code);
+        if (result.error) {
+            return res.status(result.status).json({ error: result.error });
         }
 
         // Hash new password

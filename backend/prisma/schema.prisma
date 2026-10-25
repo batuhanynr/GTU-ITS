@@ -62,6 +62,8 @@ model PasswordResetToken {
   token     String   // The 6-digit code
   expiresAt DateTime
   createdAt DateTime @default(now())
+  /// Wrong-code attempts, used to lock the code after too many tries.
+  attempts  Int      @default(0)
 
   @@unique([email, token])
 }
