@@ -21,6 +21,8 @@ const GradeInternship = () => {
     const [isDirty, setIsDirty] = useState(false);
     // Internship ids the user actually edited, so only those are submitted (not unchanged rows).
     const [editedIds, setEditedIds] = useState(() => new Set());
+    // True while a save is in flight, to block double submits and term/filter changes.
+    const [saving, setSaving] = useState(false);
 
     // Toast notification helper
     const showToast = (message, type = 'info') => {
@@ -137,6 +139,7 @@ const GradeInternship = () => {
         !isDirty || window.confirm('Kaydedilmemiş notlar var. Devam ederseniz kaybolacak. Devam edilsin mi?');
 
     const handleSaveGrades = async () => {
+        if (saving) return; // a save is already in flight; do not submit the same edits twice
         try {
             // Collect all modified grades from the full loaded list, not just search-visible rows.
             const gradesToSubmit = [];
@@ -176,6 +179,8 @@ const GradeInternship = () => {
                 showToast('Kaydedilecek not bulunamadı. Lütfen en az bir öğrenciye not verin.', 'warning');
                 return;
             }
+
+            setSaving(true); // block further submits and term/filter changes until this finishes
 
             console.log('Submitting grades:', gradesToSubmit);
 
@@ -253,6 +258,9 @@ const GradeInternship = () => {
             }
             
             showToast(`Hata: ${errorMessage}`, 'error');
+            // Edits are preserved (editedIds untouched) so a failed save can be retried.
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -310,7 +318,7 @@ const GradeInternship = () => {
                             id="term-select"
                             value={selectedTermId}
                             onChange={(e) => { const v = parseInt(e.target.value); if (confirmDiscardIfDirty()) setSelectedTermId(v); }}
-                            disabled={loading}
+                            disabled={loading || saving}
                         >
                             {terms.map(term => (
                                 <option key={term.id} value={term.id}>{term.name}</option>
@@ -324,7 +332,7 @@ const GradeInternship = () => {
                             id="grade-filter"
                             value={gradeFilter}
                             onChange={(e) => { const v = e.target.value; if (confirmDiscardIfDirty()) setGradeFilter(v); }}
-                            disabled={loading}
+                            disabled={loading || saving}
                         >
                             <option value="all">Tümü</option>
                             <option value="S">Başarılı (S)</option>
@@ -339,7 +347,7 @@ const GradeInternship = () => {
                             id="type-filter"
                             value={studentTypeFilter}
                             onChange={(e) => { const v = e.target.value; if (confirmDiscardIfDirty()) setStudentTypeFilter(v); }}
-                            disabled={loading}
+                            disabled={loading || saving}
                         >
                             <option value="all">Tümü</option>
                             <option value="first">Zorunlu Staj 1</option>
@@ -356,7 +364,7 @@ const GradeInternship = () => {
                         placeholder="Öğrenci adı veya numarası ile ara..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        disabled={loading}
+                        disabled={loading || saving}
                     />
                     {searchQuery && (
                         <button className="clear-search" onClick={() => setSearchQuery('')}>
@@ -451,7 +459,7 @@ const GradeInternship = () => {
                     <button 
                         className="btn-save-grades" 
                         onClick={handleSaveGrades}
-                        disabled={loading}
+                        disabled={loading || saving}
                     >
                         <i className="fa-solid fa-save"></i> 
                         Tüm Notları Kaydet
