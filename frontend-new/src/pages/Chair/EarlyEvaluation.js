@@ -107,12 +107,13 @@ const EarlyEvaluation = () => {
         return true;
     });
 
-    const handleSelectStudent = (studentId) => {
+    // Selection is keyed by internship id so two internships of one student stay independent.
+    const handleSelectStudent = (internshipId) => {
         setSelectedStudents(prev => {
-            if (prev.includes(studentId)) {
-                return prev.filter(id => id !== studentId);
+            if (prev.includes(internshipId)) {
+                return prev.filter(id => id !== internshipId);
             } else {
-                return [...prev, studentId];
+                return [...prev, internshipId];
             }
         });
     };
@@ -121,7 +122,7 @@ const EarlyEvaluation = () => {
         if (selectedStudents.length === filteredStudents.length) {
             setSelectedStudents([]);
         } else {
-            setSelectedStudents(filteredStudents.map(s => s.id));
+            setSelectedStudents(filteredStudents.map(s => s.currentInternship.id));
         }
     };
 
@@ -170,14 +171,15 @@ const EarlyEvaluation = () => {
             const user = authService.getCurrentUser();
             const token = localStorage.getItem('token');
 
-            // Prepare bulk grade data
-            const grades = selectedStudents.map(studentId => {
-                const student = students.find(s => s.id === studentId);
+            // Prepare bulk grade data keyed by internship id (selectedStudents holds internship ids).
+            const grades = selectedStudents.map(internshipId => {
+                const student = students.find(s => s.currentInternship.id === internshipId);
                 return {
+                    internshipId,
                     studentId: student.studentNumber,
                     internshipOrder: student.currentInternship.internshipOrder,
-                    grade: evaluationData[studentId].grade,
-                    gradeComment: evaluationData[studentId].reason
+                    grade: evaluationData[internshipId].grade,
+                    gradeComment: evaluationData[internshipId].reason
                 };
             });
 
@@ -194,9 +196,9 @@ const EarlyEvaluation = () => {
 
             console.log('Grades saved:', gradeResponse.data);
 
-            // Get the student IDs (student numbers) of selected students
-            const studentIdsToReport = selectedStudents.map(studentId => {
-                const student = students.find(s => s.id === studentId);
+            // Map selected internship ids back to student numbers for the report request.
+            const studentIdsToReport = selectedStudents.map(internshipId => {
+                const student = students.find(s => s.currentInternship.id === internshipId);
                 return student.studentNumber;
             });
 
@@ -267,8 +269,9 @@ const EarlyEvaluation = () => {
     };
 
     const getSelectedStudentData = () => {
-        return selectedStudents.map(id => 
-            students.find(s => s.id === id)
+        // selectedStudents holds internship ids, so match on currentInternship.id.
+        return selectedStudents.map(internshipId =>
+            students.find(s => s.currentInternship.id === internshipId)
         ).filter(s => s !== undefined);
     };
 
@@ -416,12 +419,12 @@ const EarlyEvaluation = () => {
                                 );
                                 
                                 return (
-                                    <tr key={student.id} className={outOfRange ? 'out-of-term-range' : ''}>
+                                    <tr key={student.currentInternship.id} className={outOfRange ? 'out-of-term-range' : ''}>
                                         <td>
-                                            <input 
+                                            <input
                                                 type="checkbox"
-                                                checked={selectedStudents.includes(student.id)}
-                                                onChange={() => handleSelectStudent(student.id)}
+                                                checked={selectedStudents.includes(student.currentInternship.id)}
+                                                onChange={() => handleSelectStudent(student.currentInternship.id)}
                                             />
                                         </td>
                                         <td>{student.studentNumber}</td>
@@ -477,32 +480,34 @@ const EarlyEvaluation = () => {
 
                             <div className="evaluation-list">
                                 {getSelectedStudentData().map(student => (
-                                    <div key={student.id} className="evaluation-item">
+                                    <div key={student.currentInternship.id} className="evaluation-item">
                                         <div className="evaluation-student-info">
                                             <strong>{student.name}</strong>
                                             <span className="student-number">({student.studentNumber})</span>
+                                            {/* Show which internship is being graded to distinguish Staj 1 / Staj 2 */}
+                                            <span className="student-number"> - {student.currentInternship.internshipOrder === 'STAJ1' ? 'Staj 1' : 'Staj 2'}</span>
                                         </div>
-                                        
+
                                         <div className="evaluation-inputs">
                                             <div className="eval-input-group">
                                                 <label>Not:</label>
-                                                <select 
-                                                    value={evaluationData[student.id]?.grade || ''}
-                                                    onChange={(e) => handleEvaluationChange(student.id, 'grade', e.target.value)}
+                                                <select
+                                                    value={evaluationData[student.currentInternship.id]?.grade || ''}
+                                                    onChange={(e) => handleEvaluationChange(student.currentInternship.id, 'grade', e.target.value)}
                                                 >
                                                     <option value="">Seçiniz</option>
                                                     <option value="S">S (Başarılı)</option>
                                                     <option value="U">U (Başarısız)</option>
                                                 </select>
                                             </div>
-                                            
+
                                             <div className="eval-input-group">
                                                 <label>Sebep:</label>
-                                                <input 
+                                                <input
                                                     type="text"
                                                     placeholder="Erken değerlendirme sebebi..."
-                                                    value={evaluationData[student.id]?.reason || ''}
-                                                    onChange={(e) => handleEvaluationChange(student.id, 'reason', e.target.value)}
+                                                    value={evaluationData[student.currentInternship.id]?.reason || ''}
+                                                    onChange={(e) => handleEvaluationChange(student.currentInternship.id, 'reason', e.target.value)}
                                                 />
                                             </div>
                                         </div>

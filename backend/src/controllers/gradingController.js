@@ -8,12 +8,12 @@ import prisma from '../config/prisma.js';
  */
 export async function gradeInternship(req, res) {
   try {
-    const { internshipId, studentId, internshipOrder, grade, gradeComment } = req.body;
+    const { internshipId, grade, gradeComment } = req.body;
 
-    // Validate required fields
-    if (!studentId || !internshipOrder || !grade) {
+    // Grade a specific internship by its id so the exact record is targeted.
+    if (!internshipId || !grade) {
       return res.status(400).json({
-        error: 'Missing required fields: studentId, internshipOrder, and grade are required',
+        error: 'Missing required fields: internshipId and grade are required',
       });
     }
 
@@ -23,19 +23,14 @@ export async function gradeInternship(req, res) {
     }
 
     const target = await prisma.internship.findUnique({
-      where: { studentId_internshipOrder: { studentId, internshipOrder } }, include: { student: true }
+      where: { id: Number(internshipId) }, include: { student: true }
     });
     if (!target) return res.status(404).json({ error: 'Internship not found' });
     if (!await departmentAccess(req, res, target.student.departmentId)) return;
 
     // Update the internship with grade and optional comment
     const updatedInternship = await prisma.internship.update({
-      where: {
-        studentId_internshipOrder: {
-          studentId,
-          internshipOrder,
-        },
-      },
+      where: { id: target.id },
       data: {
         grade,
         gradeComment: gradeComment || null,
@@ -94,12 +89,13 @@ export async function bulkGradeInternships(req, res) {
 
     // Process each grade
     for (const gradeData of grades) {
-      const { studentId, internshipOrder, grade, gradeComment } = gradeData;
-      console.log(`Processing grade for student ${studentId}, internship ${internshipOrder}`);
+      const { internshipId, studentId, internshipOrder, grade, gradeComment } = gradeData;
+      console.log(`Processing grade for internship ${internshipId} (student ${studentId})`);
 
-      // Validate required fields
-      if (!studentId || !internshipOrder || !grade) {
+      // internshipId identifies the exact record; studentId/order are kept only for error context.
+      if (!internshipId || !grade) {
         errors.push({
+          internshipId,
           studentId,
           internshipOrder,
           error: 'Missing required fields',
@@ -110,6 +106,7 @@ export async function bulkGradeInternships(req, res) {
       // Validate grade value
       if (!['S', 'U'].includes(grade)) {
         errors.push({
+          internshipId,
           studentId,
           internshipOrder,
           error: 'Grade must be either "S" or "U"',
@@ -119,25 +116,20 @@ export async function bulkGradeInternships(req, res) {
 
       try {
         const target = await prisma.internship.findUnique({
-          where: { studentId_internshipOrder: { studentId, internshipOrder } }, include: { student: true }
+          where: { id: Number(internshipId) }, include: { student: true }
         });
         if (!target) {
-          errors.push({ studentId, internshipOrder, error: 'Internship not found' });
+          errors.push({ internshipId, studentId, internshipOrder, error: 'Internship not found' });
           continue;
         }
         let accessError;
         const accessResponse = { status: () => ({ json: value => { accessError = value.error; } }) };
         if (!await departmentAccess(req, accessResponse, target.student.departmentId)) {
-          errors.push({ studentId, internshipOrder, error: accessError });
+          errors.push({ internshipId, studentId, internshipOrder, error: accessError });
           continue;
         }
         const updatedInternship = await prisma.internship.update({
-          where: {
-            studentId_internshipOrder: {
-              studentId,
-              internshipOrder,
-            },
-          },
+          where: { id: target.id },
           data: {
             grade,
             gradeComment: gradeComment || null,
@@ -146,14 +138,16 @@ export async function bulkGradeInternships(req, res) {
         });
 
         results.push({
+          internshipId,
           studentId,
           internshipOrder,
           success: true,
         });
       } catch (error) {
-        console.error(`Error grading internship for student ${studentId}:`, error);
+        console.error(`Error grading internship ${internshipId} (student ${studentId}):`, error);
         console.error('Error details:', { code: error.code, message: error.message });
         errors.push({
+          internshipId,
           studentId,
           internshipOrder,
           error: error.code === 'P2025' ? 'Internship not found' : 'Failed to grade',
