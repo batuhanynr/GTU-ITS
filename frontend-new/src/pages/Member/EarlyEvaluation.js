@@ -196,13 +196,7 @@ const EarlyEvaluation = () => {
 
             console.log('Grades saved:', gradeResponse.data);
 
-            // Map selected internship ids back to student numbers for the report request.
-            const studentIdsToReport = selectedStudents.map(internshipId => {
-                const student = students.find(s => s.currentInternship.id === internshipId);
-                return student.studentNumber;
-            });
-
-            // Then, generate the report for only the selected students
+            // Generate the report for exactly the selected internships (not all of the student's).
             const reportResponse = await axios.post(
                 `${API_URL}/internship/generate-report`,
                 {
@@ -210,7 +204,7 @@ const EarlyEvaluation = () => {
                     departmentId: user.department.id,
                     gradeFilter: null,
                     studentTypeFilter: null,
-                    studentIds: studentIdsToReport
+                    internshipIds: selectedStudents
                 },
                 {
                     headers: {

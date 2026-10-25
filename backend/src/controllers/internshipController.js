@@ -451,7 +451,7 @@ function parseDate(dateStr) {
  */
 export async function generateCommissionReport(req, res) {
   try {
-    const { termId, departmentId, gradeFilter, studentTypeFilter, studentIds, includeReported } = req.body;
+    const { termId, departmentId, gradeFilter, studentTypeFilter, studentIds, internshipIds, includeReported } = req.body;
 
     if (!termId || !departmentId) {
       return res.status(400).json({ error: 'Term ID ve Department ID gereklidir.' });
@@ -495,6 +495,12 @@ export async function generateCommissionReport(req, res) {
       whereClause.student.id = {
         in: studentIds
       };
+    }
+
+    // Report exactly the selected internships (early evaluation) so a student's other
+    // internship in the same term is excluded. The department filter above still blocks other departments.
+    if (Array.isArray(internshipIds) && internshipIds.length > 0) {
+      whereClause.id = { in: internshipIds.map(Number) };
     }
 
     // Apply grade filter
