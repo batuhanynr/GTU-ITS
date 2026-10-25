@@ -169,38 +169,36 @@ export const assignCommissionChair = async (req, res) => {
             return res.status(400).json({ error: 'Kullanıcı ID ve Bölüm ID gereklidir.' });
         }
 
-        // Only an existing Commission Chair may be assigned.
-        const target = await prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
-        if (!target || target.role?.name !== 'Commission Chair') {
-            return res.status(404).json({ error: 'Komisyon başkanı bulunamadı.' });
-        }
-
-        // Reject if the department already has a different chair (avoids two chairs per department).
-        const existingChair = await prisma.user.findFirst({
-            where: { departmentId, roleId: target.roleId, id: { not: userId } }
-        });
-        if (existingChair) {
-            return res.status(409).json({ error: 'Bu bölümde zaten bir komisyon başkanı var.' });
-        }
-
-        // Update user's department
-        const updatedUser = await prisma.user.update({
-            where: { id: userId },
-            data: {
-                departmentId: departmentId
-            },
-            include: {
-                role: true,
-                department: true
+        // Check occupancy and move the chair in one transaction to prevent competing assignments.
+        const result = await prisma.$transaction(async tx => {
+            const target = await tx.user.findUnique({ where: { id: userId }, include: { role: true } });
+            if (!target || target.role?.name !== 'Commission Chair') {
+                return { status: 404, error: 'Komisyon başkanı bulunamadı.' };
             }
-        });
+            const existingChair = await tx.user.findFirst({
+                where: { departmentId, roleId: target.roleId, id: { not: userId } }
+            });
+            if (existingChair) {
+                return { status: 409, error: 'Bu bölümde zaten bir komisyon başkanı var.' };
+            }
+            const user = await tx.user.update({
+                where: { id: userId },
+                data: { departmentId },
+                include: { role: true, department: true }
+            });
+            return { user };
+        }, { isolationLevel: 'Serializable' });
+        if (result.error) return res.status(result.status).json({ error: result.error });
 
         res.json({
             message: 'Komisyon başkanı başarıyla atandı.',
-            user: updatedUser
+            user: result.user
         });
 
     } catch (error) {
+        if (error.code === 'P2034') {
+            return res.status(409).json({ error: 'Başkan ataması değişti. Listeyi yenileyip tekrar deneyiniz.' });
+        }
         console.error(error);
         res.status(500).json({ error: 'Komisyon başkanı atanırken bir hata oluştu.' });
     }
