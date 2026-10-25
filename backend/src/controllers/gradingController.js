@@ -89,6 +89,11 @@ export async function bulkGradeInternships(req, res) {
 
     // Process each grade
     for (const gradeData of grades) {
+      // A null/malformed row becomes a per-row error instead of a 500 after partial writes.
+      if (!gradeData || typeof gradeData !== 'object') {
+        errors.push({ error: 'Malformed grade row' });
+        continue;
+      }
       const { internshipId, studentId, internshipOrder, grade, gradeComment } = gradeData;
       console.log(`Processing grade for internship ${internshipId} (student ${studentId})`);
 
