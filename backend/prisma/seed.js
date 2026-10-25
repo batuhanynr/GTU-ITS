@@ -541,9 +541,10 @@ const s12 = await prisma.student.upsert({
   // Student 1 (Ali Veli) - STAJ1 (Completed) & STAJ2 (In Progress)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s1.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termSummer25.id,
       },
     },
     update: {},
@@ -566,9 +567,10 @@ const s12 = await prisma.student.upsert({
   });
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s1.id,
         internshipOrder: InternshipOrderType.STAJ2,
+        termId: termSummer25.id,
       },
     },
     update: {},
@@ -589,9 +591,10 @@ const s12 = await prisma.student.upsert({
   // Student 2 (Ayşe Kaya) - STAJ1 (Awaiting)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s2.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termSummer25.id,
       },
     },
     update: {},
@@ -611,9 +614,10 @@ const s12 = await prisma.student.upsert({
   // Student 3 (Mehmet Yılmaz) - STAJ1 (Completed, Winter)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s3.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termWinter25.id,
       },
     },
     update: {},
@@ -634,9 +638,10 @@ const s12 = await prisma.student.upsert({
   // Student 4 (Fatma Demir) - STAJ1 (In Progress)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s4.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termSummer25.id,
       },
     },
     update: {},
@@ -655,9 +660,10 @@ const s12 = await prisma.student.upsert({
   // Student 5 (Hasan Çelik) - STAJ1 (Completed)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s5.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termSummer25.id,
       },
     },
     update: {},
@@ -678,9 +684,10 @@ const s12 = await prisma.student.upsert({
   // Student 6 (Zeynep Şahin) - STAJ1 (Awaiting) & STAJ2 (In Progress, Erasmus)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s6.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termWinter25.id,
       },
     },
     update: {},
@@ -698,9 +705,10 @@ const s12 = await prisma.student.upsert({
   });
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s6.id,
         internshipOrder: InternshipOrderType.STAJ2,
+        termId: termSummer25.id,
       },
     },
     update: {},
@@ -720,9 +728,10 @@ const s12 = await prisma.student.upsert({
   // Student 7 (Burak Öz) - STAJ1 (Completed)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s7.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termSummer25.id,
       },
     },
     update: {},
@@ -743,9 +752,10 @@ const s12 = await prisma.student.upsert({
   // Student 8 (Elif Arda) - STAJ1 (In Progress, Winter)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s8.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termWinter25.id,
       },
     },
     update: {},
@@ -764,9 +774,10 @@ const s12 = await prisma.student.upsert({
   // Student 9 (Kemal Can) - STAJ1 (Completed)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s9.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termSummer25.id,
       },
     },
     update: {},
@@ -787,9 +798,10 @@ const s12 = await prisma.student.upsert({
   // Student 10 (Derya Güneş) - STAJ1 (Awaiting)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s10.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termSummer25.id,
       },
     },
     update: {},
@@ -809,9 +821,10 @@ const s12 = await prisma.student.upsert({
   // Student 11 (Ömer Faruk) - STAJ1 (Completed) & STAJ2 (Awaiting)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s11.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termWinter25.id,
       },
     },
     update: {},
@@ -830,9 +843,10 @@ const s12 = await prisma.student.upsert({
   });
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s11.id,
         internshipOrder: InternshipOrderType.STAJ2,
+        termId: termSummer25.id,
       },
     },
     update: {},
@@ -852,9 +866,10 @@ const s12 = await prisma.student.upsert({
   // Student 12 (İpek Yıldız) - STAJ1 (In Progress)
   await prisma.internship.upsert({
     where: {
-      studentId_internshipOrder: {
+      studentId_internshipOrder_termId: {
         studentId: s12.id,
         internshipOrder: InternshipOrderType.STAJ1,
+        termId: termSummer25.id,
       },
     },
     update: {},
