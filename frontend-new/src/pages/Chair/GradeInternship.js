@@ -135,6 +135,8 @@ const GradeInternship = () => {
                 // Only submit if grade is set
                 if (grade && (grade === 'S' || grade === 'U')) {
                     const gradeData = {
+                        // Send internshipId so the exact internship is graded, not the first match.
+                        internshipId,
                         studentId: student.id,
                         internshipOrder: student.currentInternship.internshipOrder,
                         grade
