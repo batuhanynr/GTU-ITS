@@ -193,15 +193,15 @@ export const resetPassword = async (req, res) => {
 
 export const changePassword = async (req, res) => {
     try {
-        const { email, currentPassword, newPassword } = req.body;
+        const { currentPassword, newPassword } = req.body;
 
-        if (!email || !currentPassword || !newPassword) {
+        if (!currentPassword || !newPassword) {
             return res.status(400).json({ error: 'Tüm alanlar zorunludur.' });
         }
 
-        // Find user
+        // Identify the user from the authenticated token, not the request body.
         const user = await prisma.user.findUnique({
-            where: { email }
+            where: { id: req.user.userId }
         });
 
         if (!user) {
