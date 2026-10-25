@@ -169,6 +169,20 @@ export const assignCommissionChair = async (req, res) => {
             return res.status(400).json({ error: 'Kullanıcı ID ve Bölüm ID gereklidir.' });
         }
 
+        // Only an existing Commission Chair may be assigned.
+        const target = await prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
+        if (!target || target.role?.name !== 'Commission Chair') {
+            return res.status(404).json({ error: 'Komisyon başkanı bulunamadı.' });
+        }
+
+        // Reject if the department already has a different chair (avoids two chairs per department).
+        const existingChair = await prisma.user.findFirst({
+            where: { departmentId, roleId: target.roleId, id: { not: userId } }
+        });
+        if (existingChair) {
+            return res.status(409).json({ error: 'Bu bölümde zaten bir komisyon başkanı var.' });
+        }
+
         // Update user's department
         const updatedUser = await prisma.user.update({
             where: { id: userId },
