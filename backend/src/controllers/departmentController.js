@@ -323,18 +323,6 @@ export const createCommissionMember = async (req, res) => {
             return res.status(404).json({ error: 'Commission Member rolü bulunamadı.' });
         }
 
-        // Check if department already has 2 members
-        const existingMembers = await prisma.user.findMany({
-            where: {
-                departmentId: departmentId,
-                roleId: memberRole.id
-            }
-        });
-
-        if (existingMembers.length >= 2) {
-            return res.status(400).json({ error: 'Bu bölümde zaten 2 komisyon üyesi bulunmaktadır.' });
-        }
-
         // Create username from first and last name
         const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
         const fullName = `${firstName} ${lastName}`;
@@ -342,22 +330,31 @@ export const createCommissionMember = async (req, res) => {
         // Hash temporary password
         const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
-        // Create new member with requiresPasswordChange flag set to true
-        const newMember = await prisma.user.create({
-            data: {
-                name: fullName,
-                username: username,
-                email: email,
-                password: hashedPassword,
-                roleId: memberRole.id,
-                departmentId: departmentId,
-                requiresPasswordChange: true
-            },
-            include: {
-                role: true,
-                department: true
-            }
-        });
+        // Serialize the slot check and insert so concurrent requests cannot add a third member.
+        const newMember = await prisma.$transaction(async tx => {
+            const count = await tx.user.count({ where: { departmentId, roleId: memberRole.id } });
+            if (count >= 2) return null;
+            // Create new member with requiresPasswordChange flag set to true
+            return tx.user.create({
+                data: {
+                    name: fullName,
+                    username: username,
+                    email: email,
+                    password: hashedPassword,
+                    roleId: memberRole.id,
+                    departmentId: departmentId,
+                    requiresPasswordChange: true
+                },
+                include: {
+                    role: true,
+                    department: true
+                }
+            });
+
+        }, { isolationLevel: 'Serializable' });
+        if (!newMember) {
+            return res.status(400).json({ error: 'Bu bölümde zaten 2 komisyon üyesi bulunmaktadır.' });
+        }
 
         res.json({
             message: 'Komisyon üyesi başarıyla oluşturuldu.',
@@ -365,6 +362,9 @@ export const createCommissionMember = async (req, res) => {
         });
 
     } catch (error) {
+        if (error.code === 'P2034') {
+            return res.status(409).json({ error: 'Komisyon üyeleri değişti. Listeyi yenileyip tekrar deneyiniz.' });
+        }
         console.error(error);
         if (error.code === 'P2002') {
             return res.status(400).json({ error: 'Bu e-posta veya kullanıcı adı zaten kullanılıyor.' });
