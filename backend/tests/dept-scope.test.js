@@ -10,7 +10,7 @@ test('single and bulk grades reject another department without writing', async (
     prisma.user.findUnique = async () => ({ departmentId: 1, role: { name: 'Commission Member' } });
     prisma.internship.findUnique = async () => ({ student: { departmentId: 2 } });
     prisma.internship.update = async () => { writes++; };
-    const body = { studentId: '123', internshipOrder: 'STAJ1', grade: 'S' };
+    const body = { internshipId: 5, studentId: '123', internshipOrder: 'STAJ1', grade: 'S' };
     const res = { statusCode: 200, status(code) { this.statusCode = code; return this; }, json(value) { this.body = value; return this; } };
     try {
         await gradeInternship({ user: { userId: 1 }, body }, res);
