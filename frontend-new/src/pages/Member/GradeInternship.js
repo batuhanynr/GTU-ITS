@@ -19,6 +19,8 @@ const GradeInternship = () => {
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
     // Tracks unsaved grade/note edits so we can warn before they are discarded.
     const [isDirty, setIsDirty] = useState(false);
+    // Internship ids the user actually edited, so only those are submitted (not unchanged rows).
+    const [editedIds, setEditedIds] = useState(() => new Set());
 
     // Toast notification helper
     const showToast = (message, type = 'info') => {
@@ -85,6 +87,7 @@ const GradeInternship = () => {
                 setStudentGrades(grades);
                 setStudentNotes(notes);
                 setIsDirty(false); // freshly loaded data is not dirty
+                setEditedIds(new Set()); // nothing edited yet for this load
             } catch (err) {
                 console.error('Error fetching students:', err);
                 setError('Failed to load students');
@@ -109,12 +112,15 @@ const GradeInternship = () => {
         return true;
     });
 
+    const markEdited = (internshipId) => setEditedIds(prev => new Set(prev).add(internshipId));
+
     const handleGradeChange = (internshipId, grade) => {
         setStudentGrades(prev => ({
             ...prev,
             [internshipId]: grade
         }));
         setIsDirty(true);
+        markEdited(internshipId);
     };
 
     const handleNoteChange = (internshipId, note) => {
@@ -123,6 +129,7 @@ const GradeInternship = () => {
             [internshipId]: note
         }));
         setIsDirty(true);
+        markEdited(internshipId);
     };
 
     // Warn before an action that would reload the list and discard unsaved edits.
@@ -138,6 +145,9 @@ const GradeInternship = () => {
                 const internshipId = student.currentInternship?.id;
                 if (!internshipId) return;
 
+                // Only submit rows the user actually edited, so unchanged rows can't overwrite others.
+                if (!editedIds.has(internshipId)) return;
+
                 const grade = studentGrades[internshipId];
                 const gradeComment = studentNotes[internshipId]?.trim();
 
@@ -148,14 +158,16 @@ const GradeInternship = () => {
                         internshipId,
                         studentId: student.id,
                         internshipOrder: student.currentInternship.internshipOrder,
-                        grade
+                        grade,
+                        // Optimistic lock: the grade the user started from; reject if it changed since.
+                        expectedGrade: student.currentInternship.grade ?? null
                     };
-                    
+
                     // Only add gradeComment if it has content
                     if (gradeComment) {
                         gradeData.gradeComment = gradeComment;
                     }
-                    
+
                     gradesToSubmit.push(gradeData);
                 }
             });
@@ -219,6 +231,7 @@ const GradeInternship = () => {
             setStudentGrades(grades);
             setStudentNotes(notes);
             setIsDirty(errorCount > 0); // remaining failed edits are still unsaved
+            setEditedIds(failedIds); // only failed/conflicting rows stay pending for retry
         } catch (err) {
             console.error('Full error object:', err);
             console.error('Error response:', err.response);

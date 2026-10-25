@@ -8,7 +8,7 @@ import prisma from '../config/prisma.js';
  */
 export async function gradeInternship(req, res) {
   try {
-    const { internshipId, grade, gradeComment } = req.body;
+    const { internshipId, grade, gradeComment, expectedGrade } = req.body;
 
     // Grade a specific internship by its id so the exact record is targeted.
     if (!internshipId || !grade) {
@@ -27,6 +27,11 @@ export async function gradeInternship(req, res) {
     });
     if (!target) return res.status(404).json({ error: 'Internship not found' });
     if (!await departmentAccess(req, res, target.student.departmentId)) return;
+
+    // Optimistic lock: when expectedGrade is sent, reject if the grade changed meanwhile.
+    if (expectedGrade !== undefined && target.grade !== (expectedGrade ?? null)) {
+      return res.status(409).json({ error: 'Conflict: grade was changed by someone else' });
+    }
 
     // Update the internship with grade and optional comment
     const updatedInternship = await prisma.internship.update({
@@ -133,14 +138,24 @@ export async function bulkGradeInternships(req, res) {
           errors.push({ internshipId, studentId, internshipOrder, error: accessError });
           continue;
         }
-        const updatedInternship = await prisma.internship.update({
-          where: { id: target.id },
+        // Optimistic lock: when the client sends the grade it last saw, only overwrite if it
+        // still matches, so a stale screen cannot clobber another evaluator's newer grade.
+        const where = { id: target.id };
+        if (Object.prototype.hasOwnProperty.call(gradeData, 'expectedGrade')) {
+          where.grade = gradeData.expectedGrade ?? null;
+        }
+        const updated = await prisma.internship.updateMany({
+          where,
           data: {
             grade,
             gradeComment: gradeComment || null,
             status: 'COMPLETED',
           },
         });
+        if (updated.count === 0) {
+          errors.push({ internshipId, studentId, internshipOrder, error: 'Conflict: grade was changed by someone else' });
+          continue;
+        }
 
         results.push({
           internshipId,
