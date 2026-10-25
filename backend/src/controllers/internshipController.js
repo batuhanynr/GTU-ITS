@@ -447,7 +447,7 @@ function parseDate(dateStr) {
  */
 export async function generateCommissionReport(req, res) {
   try {
-    const { termId, departmentId, gradeFilter, studentTypeFilter, studentIds } = req.body;
+    const { termId, departmentId, gradeFilter, studentTypeFilter, studentIds, includeReported } = req.body;
 
     if (!termId || !departmentId) {
       return res.status(400).json({ error: 'Term ID ve Department ID gereklidir.' });
@@ -476,11 +476,15 @@ export async function generateCommissionReport(req, res) {
     // Build filters for internships
     const whereClause = {
       termId: parseInt(termId),
-      isReported: false, // Only include internships that haven't been reported yet
       student: {
         departmentId: parseInt(departmentId)
       }
     };
+
+    // By default only unreported internships; when regenerating, include already-reported ones.
+    if (!includeReported) {
+      whereClause.isReported = false;
+    }
 
     // If specific student IDs are provided, filter by them
     if (studentIds && Array.isArray(studentIds) && studentIds.length > 0) {
