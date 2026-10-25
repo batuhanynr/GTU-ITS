@@ -4,6 +4,10 @@ import prisma from '../src/config/prisma.js';
 import { createInternship, getOriginalDocument } from '../src/controllers/internshipController.js';
 
 test('approved PDF bytes are saved and downloads enforce department access', async () => {
+    const originalTransaction = prisma.$transaction;
+    const originalFindFirst = prisma.internship.findFirst;
+    prisma.$transaction = async work => work(prisma);
+    prisma.internship.findFirst = async () => null;
     const originals = [prisma.user.findUnique, prisma.student.findUnique, prisma.student.upsert, prisma.company.upsert,
         prisma.internship.findUnique, prisma.internship.create, prisma.internshipDocument.findUnique];
     const bytes = Buffer.from('%PDF-1.4\noriginal-file');
@@ -34,7 +38,7 @@ test('approved PDF bytes are saved and downloads enforce department access', asy
         prisma.internshipDocument.findUnique = async () => null;
         await getOriginalDocument({ user: { userId: 1 }, params: { id: '42' } }, res);
         assert.equal(res.statusCode, 404);
-    } finally {
+    } finally { prisma.$transaction = originalTransaction; prisma.internship.findFirst = originalFindFirst;
         [prisma.user.findUnique, prisma.student.findUnique, prisma.student.upsert, prisma.company.upsert,
             prisma.internship.findUnique, prisma.internship.create, prisma.internshipDocument.findUnique] = originals;
     }
