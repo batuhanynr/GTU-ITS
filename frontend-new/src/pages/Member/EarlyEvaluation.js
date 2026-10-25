@@ -196,6 +196,17 @@ const EarlyEvaluation = () => {
 
             console.log('Grades saved:', gradeResponse.data);
 
+            // Stop before creating the report if any grade failed, and show which students failed.
+            if (gradeResponse.data.errorCount > 0) {
+                const failed = gradeResponse.data.errors.map(e => {
+                    const s = students.find(st => st.currentInternship?.id === e.internshipId);
+                    return s ? `${s.name} (${s.studentNumber})` : (e.studentId || e.internshipId);
+                }).join(', ');
+                setError(`Bazı notlar kaydedilemedi, tutanak oluşturulmadı: ${failed}`);
+                setLoading(false);
+                return;
+            }
+
             // Generate the report for exactly the selected internships (not all of the student's).
             const reportResponse = await axios.post(
                 `${API_URL}/internship/generate-report`,
