@@ -99,43 +99,31 @@ export async function createInternship(req, res) {
       return res.status(400).json({ error: 'internshipType must be STAJ1 or STAJ2' });
     }
 
-    // If STAJ2, check if STAJ1 exists and is passed (grade = 'S')
+    // If STAJ2, require any passed STAJ1 (findFirst, since a student may have retaken STAJ1).
     if (internshipType === 'STAJ2') {
-      const staj1 = await prisma.internship.findUnique({
-        where: {
-          studentId_internshipOrder: {
-            studentId,
-            internshipOrder: 'STAJ1'
-          }
-        }
+      const passedStaj1 = await prisma.internship.findFirst({
+        where: { studentId, internshipOrder: 'STAJ1', grade: 'S' }
       });
 
-      if (!staj1) {
-        return res.status(400).json({ 
-          error: 'Student must complete STAJ1 before registering for STAJ2' 
-        });
-      }
-
-      if (staj1.grade !== 'S') {
-        return res.status(400).json({ 
-          error: 'Student must pass STAJ1 (grade = S) before registering for STAJ2' 
+      if (!passedStaj1) {
+        return res.status(400).json({
+          error: 'Student must pass STAJ1 (grade = S) before registering for STAJ2'
         });
       }
     }
 
-    // Check if student already has this internship type
-    const existingInternship = await prisma.internship.findUnique({
+    // Block only an active or passed internship of this type; a failed (U) one may be retaken next term.
+    const blockingInternship = await prisma.internship.findFirst({
       where: {
-        studentId_internshipOrder: {
-          studentId,
-          internshipOrder: internshipType
-        }
+        studentId,
+        internshipOrder: internshipType,
+        OR: [{ grade: null }, { grade: 'S' }]
       }
     });
 
-    if (existingInternship) {
-      return res.status(400).json({ 
-        error: `Student already has ${internshipType} registered` 
+    if (blockingInternship) {
+      return res.status(400).json({
+        error: `Student already has an active or passed ${internshipType}`
       });
     }
 

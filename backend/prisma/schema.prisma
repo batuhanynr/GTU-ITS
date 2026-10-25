@@ -163,8 +163,8 @@ model Internship {
   /// Staj için rapor oluşturuldu mu?
   isReported  Boolean @default(false)
 
-  /// Veri bütünlüğü için: Bir öğrencinin her staj türünden sadece bir tane olabilir.
-  @@unique([studentId, internshipOrder])
+  /// Scope uniqueness to the term so a failed internship can be retaken in a later term.
+  @@unique([studentId, internshipOrder, termId])
 }
 // Store approved source PDFs with their internship so database backups include them.
 model InternshipDocument {
