@@ -167,8 +167,18 @@ const GradeInternship = () => {
 
             console.log('Grade submission response:', response.data);
 
-            showToast(`${response.data.successCount} öğrencinin notu başarıyla kaydedildi!`, 'success');
-            
+            const { successCount, errorCount, errors } = response.data;
+            if (errorCount > 0) {
+                // Name the records that failed so they are not silently dropped.
+                const failed = errors.map(e => {
+                    const s = students.find(st => st.currentInternship?.id === e.internshipId);
+                    return s ? `${s.name} (${s.id})` : (e.studentId || e.internshipId);
+                }).join(', ');
+                showToast(`${successCount} not kaydedildi, ${errorCount} kaydedilemedi: ${failed}`, 'warning');
+            } else {
+                showToast(`${successCount} öğrencinin notu başarıyla kaydedildi!`, 'success');
+            }
+
             // Refresh the student list
             const user = authService.getCurrentUser();
             const queryParams = new URLSearchParams();
