@@ -191,6 +191,8 @@ export const assignCommissionChair = async (req, res) => {
             const user = await tx.user.update({
                 where: { id: userId },
                 data: { departmentId },
+                // Account responses must never include the stored password hash.
+                omit: { password: true },
                 include: { role: true, department: true }
             });
             return { user };
@@ -350,6 +352,8 @@ export const createCommissionMember = async (req, res) => {
                     departmentId: departmentId,
                     requiresPasswordChange: true
                 },
+                // Keep the hash in storage while returning the fields used by the member screen.
+                omit: { password: true },
                 include: {
                     role: true,
                     department: true
