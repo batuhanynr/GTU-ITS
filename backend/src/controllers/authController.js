@@ -186,16 +186,18 @@ export const resetPasswordWithCode = async (req, res) => {
         // Hash new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        // Update user
-        await prisma.user.update({
-            where: { email },
-            data: { password: hashedPassword }
+        // Claim the code and update the password together so concurrent resets have one winner.
+        const changed = await prisma.$transaction(async tx => {
+            const consumed = await tx.passwordResetToken.deleteMany({
+                where: { id: result.record.id, email, token: code, attempts: { lt: MAX_RESET_ATTEMPTS }, expiresAt: { gt: new Date() } }
+            });
+            if (consumed.count !== 1) return false;
+            await tx.user.update({ where: { email }, data: { password: hashedPassword } });
+            return true;
         });
-
-        // Delete used token
-        await prisma.passwordResetToken.deleteMany({
-            where: { email }
-        });
+        if (!changed) {
+            return res.status(400).json({ error: 'Geçersiz veya süresi dolmuş kod.' });
+        }
 
         res.json({ message: 'Şifreniz başarıyla güncellendi.' });
 
