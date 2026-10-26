@@ -35,3 +35,11 @@ GitHub does not allow authors to approve their own PRs. The repository requires 
 ## Validation boundaries
 
 Use a separate PostgreSQL database for tests that write data. Never seed or reset an existing departmental database to run a regression. The reports include API/database tests and React component tests; they do not establish live browser coverage or real email delivery.
+
+## Review after Tuana changes
+
+[The 26 October report](post-merge-review-2026-10-26.docx) checks main at `f7c770c` after PRs #49 through #56. All eight PRs were already merged with merge commits. The existing backend suite passed 12/12 and the committed database suite passed 27/27. Follow-up scenarios found remaining failures in #34, #38, and #39, so those issues were reopened. The epic remains open.
+
+The report has 105 control rows: 95 passed and 10 failed. That includes 104 executed tests and the existing App suite that could not start. [Reproduction tests and results](evidence/2026-10-26/README.md) are stored with the report.
+
+Migration `20261025150000_active_internship_unique` is required. Before applying it to an existing database, check for multiple active or passed internships of the same type for one student. Review those records if any exist; do not delete them automatically. The local upgrade found no duplicates, applied the migration after a backup, and preserved all 11 users, 13 students, and 16 internships. No new dependency is needed.

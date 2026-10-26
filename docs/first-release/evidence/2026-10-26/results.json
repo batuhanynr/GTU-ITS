@@ -1,0 +1,744 @@
+{
+  "rows": [
+    {
+      "group": "Mevcut backend testleri",
+      "name": "Girişsiz API erişimi. Korunan 12 endpoint için tokensız istek gönder; 401 bekle.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T001"
+    },
+    {
+      "group": "Mevcut backend testleri",
+      "name": "Rol ve bölümde hesap yönetimi. Üye yönetici işlemi yapamasın; başkan başka bölümde üye oluşturamasın.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T002"
+    },
+    {
+      "group": "Mevcut backend testleri",
+      "name": "Hesap oluşturmada açık rol. Admin rol seçmeden hesap açmayı denesin; 400 bekle.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T003"
+    },
+    {
+      "group": "Mevcut backend testleri",
+      "name": "API guard kapsamı. Kullanıcı routerından sonraki endpoint erişilebilir olmalı.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T004"
+    },
+    {
+      "group": "Mevcut backend testleri",
+      "name": "Başkan transaction geri alması. Başkan oluşturma hatasında eski hesabın korunmasını kontrol et.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T005"
+    },
+    {
+      "group": "Mevcut backend testleri",
+      "name": "Bölüm dışı notlandırma regresyonu. Staj IDli istekle tekli ve toplu bölüm engelini doğrula.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T006"
+    },
+    {
+      "group": "Mevcut backend testleri",
+      "name": "Geçersiz formun erken reddi. 14 geçersiz form girdisinin DB erişiminden önce reddini bekle.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T007"
+    },
+    {
+      "group": "Mevcut backend testleri",
+      "name": "PDF saklama regresyonu. Mock ile kaynak PDF kaydı ve yetkili indirmeyi kontrol et.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T008"
+    },
+    {
+      "group": "Mevcut backend testleri",
+      "name": "Staj düzeltme alan sınırı. Düzenleme ve silmede doğru ID ve korunan sahiplik bekle.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T009"
+    },
+    {
+      "group": "Mevcut backend testleri",
+      "name": "Şifre sıfırlamada posta hatası. Ayar yokluğu gönderim başarısı ve SMTP hatasını kontrol et.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T010"
+    },
+    {
+      "group": "Mevcut backend testleri",
+      "name": "Öğrenci iletişim regresyonu. Eksik eposta telefonun korunmasını ve bölüm değişiminin reddini kontrol et.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T011"
+    },
+    {
+      "group": "Mevcut backend testleri",
+      "name": "Dönem doğrulaması. Dönem oluşturma kopya ad ve geçersiz tarihleri kontrol et.",
+      "observed": "Beklenen davranış doğrulandı.",
+      "status": "Başarılı",
+      "id": "T012"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Üye oluşturma yanıtı parola içermez ve geçici parola ile giriş çalışır.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T013"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Başkan atama yanıtında parola hashi bulunmaz.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T014"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "İki döneme paralel staj kaydında yalnız bir aktif kayıt kalır.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T015"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Aktif staj tekrarı engellenir; U notundan sonra başka dönemde tekrar kaydedilir.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T016"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Geçerli not ve null satır birlikte gönderilir; başarı ve hata ayrı raporlanır.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T017"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Başkan silme endpointi admin ve üye hesaplarını korur.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T018"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Admin başkanı silebilir; olmayan veya bozuk hedef 404 döndürür.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T019"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Üye başkan ve oturumsuz kullanıcı başkan silemez.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T020"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Paralel atama tek başkan bırakır; diğer başkanın eski bölümü korunur.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T021"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Atamada doğru rol ve dolu bölüm kontrolü korunur.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T022"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Ardışık eski not isteği reddedilir; güncel notu öğrenen kullanıcı tekrar kaydedebilir.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T023"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Aynı eski notu taşıyan iki paralel toplu istekten yalnız biri uygulanır.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T024"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Üye aynı öğrencinin iki stajından yalnız seçilen stajın notunu değiştirir.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T025"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Paralel üyelik istekleri üçüncü komisyon üyesi oluşturamaz.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T026"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Eposta çakışması ve bölüm reddi üyelik kontenjanını korur.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T027"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Kısmi toplu hata başarılı ve başarısız staj IDlerini ayrı bildirir.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T028"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Aynı dönem başarısız tekrar öğrenci bilgilerini değiştirmez ve kurum bırakmaz.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T029"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Olmayan döneme kayıt öğrenci kurum veya staj bırakmaz.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T030"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Geçerli PDF saklanır; mevcut iletişim bilgileri korunur.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T031"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Tutanak seçilen stajı içerir; diğer staj ve yabancı bölüm dışarıda kalır.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T032"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Üye raporu yeniden indirir; normal rapor daha önce raporlanan kayıtları dışlar.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T033"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Hatalı sıfırlama girdileri başka hesapların kodlarını değiştirmez.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T034"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Yanlış kod ve kilit yalnız ilgili hesap kodunu etkiler.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T035"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Doğru sıfırlama kodu yalnız kendi hesabını değiştirir.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T036"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "İki paralel sıfırlama isteği aynı kodu yalnız bir kez kullanır.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T037"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Kullanılmış veya süresi geçmiş kod parola değiştiremez.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T038"
+    },
+    {
+      "group": "Repodaki veritabanı testleri",
+      "name": "Parola güncellenemezse kodun tüketimi geri alınır.",
+      "observed": "Gerçek API ve PostgreSQL ile doğrulandı.",
+      "status": "Başarılı",
+      "id": "T039"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Başkan reddedilen yükleme. İlk öğrenciyi reddet sonra tümünü kaydet; reddedilen öğrenci gönderilmemeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T040"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Başkan kısmi yükleme tekrarı. Bir kayıt hatası sonrası yeniden kaydet; yalnız hatalı kayıt gönderilmeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T041"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Üye reddedilen yükleme. Öğrenciyi reddet sonra tümünü kaydet; reddedilen öğrenci gönderilmemeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T042"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Üye kısmi yükleme tekrarı. Kısmi hatadan sonra tekrar kaydet; başarılı kayıtlar gönderilmemeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T043"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Staj düzenleme. Seçili stajın kurumunu düzenle; doğru ID güncellensin ve liste yenilensin.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T044"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Silme iptali. Silme onayını iptal et; DELETE isteği gönderilmemeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T045"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Üye silme kontrolü. Üye için düzenleme görünsün silme görünmesin.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T046"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Yeni dönemin seçilmesi. Dönemi kaydet; sunucunun döndürdüğü dönem seçilsin.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T047"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Dönem hatasında formu koruma. Dönem kaydı hata versin; form açık kalsın başarı mesajı çıkmasın.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T048"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Üyenin yönetici ekranı erişimi. Üye yönetici ekranını açsın; kendi ekranına yönlendirilmeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T049"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Başkanın yönetici ekranı erişimi. Başkan yönetici ekranını açsın; kendi ekranına yönlendirilmeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T050"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Bilinmeyen rolün yönetici erişimi. Bilinmeyen rol yönetici ekranını açamasın.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T051"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Yöneticinin panel erişimi. Genel yönetici yönetici kontrollerini görebilmeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T052"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Misafirin girişe yönlenmesi. Tokensız kişi yönetici ekranından girişe yönlenmeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T053"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "unread fields stay in review and are not submitted",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T054"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "unread fields stay in review and are not submitted",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T055"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Eski kayıt PDF göstergesi. Dosyası olmayan kayıtta PDF saklanmadığı belirtilmeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T056"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "PDF isteğinde yetki bilgisi. İndirme isteği token ve doğru staj IDsi taşımalı.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T057"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Posta hatasında şifre ekranı. Posta hatasında kod ekranına ilerlenmemeli ve hata gösterilmeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T058"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Geçerli form alanları. Geçerli isim numara kurum tarih ve süre doğrulamadan geçmeli.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T059"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "keeps invalid internship fields for correction: { companyName: 'NOT FOUND' }",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T060"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "keeps invalid internship fields for correction: { endDate: '2026-06-01' }",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T061"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "keeps invalid internship fields for correction: { startDate: '2026-02-30' }",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T062"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "keeps invalid internship fields for correction: { duration: 0 }",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T063"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "Okunamayan öğrenci numarası. NOT FOUND numarası kayıt için geçerli sayılmamalı.",
+      "observed": "Bileşen testi geçti.",
+      "status": "Başarılı",
+      "id": "T064"
+    },
+    {
+      "group": "Mevcut arayüz testleri",
+      "name": "App test paketi başlamalı.",
+      "observed": "react-router-dom çözümlenemedi; paket başlayamadı. Önceden bilinen test altyapısı sorunu.",
+      "status": "Başarısız",
+      "id": "T065"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan kayıt sonrası veri koruması Kayıt beklerken yazılan ikinci öğrencinin notu kaybolmaz",
+      "observed": "Kayıt sürerken girilen ikinci not, ilk kayıt yanıtından sonra silindi. #39",
+      "status": "Başarısız",
+      "id": "T066"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan kayıt sonrası veri koruması Çakışan satır filtreden çıksa da bekleyen düzenleme erişilebilir kalır",
+      "observed": "Çakışan öğrenci yeni filtre sonucunda yoktu; bekleyen satır ve düzenleme kayboldu. #34",
+      "status": "Başarısız",
+      "id": "T067"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye kayıt sonrası veri koruması Kayıt beklerken yazılan ikinci öğrencinin notu kaybolmaz",
+      "observed": "Kayıt sürerken girilen ikinci not, ilk kayıt yanıtından sonra silindi. #39",
+      "status": "Başarısız",
+      "id": "T068"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye kayıt sonrası veri koruması Çakışan satır filtreden çıksa da bekleyen düzenleme erişilebilir kalır",
+      "observed": "Çakışan öğrenci yeni filtre sonucunda yoktu; bekleyen satır ve düzenleme kayboldu. #34",
+      "status": "Başarısız",
+      "id": "T069"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan erken değerlendirme çakışma koruması Not isteği ekranda görülen eski notu taşır",
+      "observed": "Erken değerlendirme isteğinde expectedGrade bulunmuyor. #38",
+      "status": "Başarısız",
+      "id": "T070"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye erken değerlendirme çakışma koruması Not isteği ekranda görülen eski notu taşır",
+      "observed": "Erken değerlendirme isteğinde expectedGrade bulunmuyor. #38",
+      "status": "Başarısız",
+      "id": "T071"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan seçili staj tutanağı Aynı öğrencinin yalnız seçilen staj IDsi rapora gönderilir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T072"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye seçili staj tutanağı Aynı öğrencinin yalnız seçilen staj IDsi rapora gönderilir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T073"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan not ekranı Kaydet isteğinde staj IDsi bulunur",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T074"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan not ekranı Filtre iptali kaydedilmemiş notu korur",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T075"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan not ekranı Aramada gizlenen öğrencinin notu da gönderilir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T076"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan not ekranı Kısmi hata mesajı başarısız öğrenciyi gösterir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T077"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye not ekranı Kaydet isteğinde staj IDsi bulunur",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T078"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye not ekranı Filtre iptali kaydedilmemiş notu korur",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T079"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye not ekranı Aramada gizlenen öğrencinin notu da gönderilir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T080"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye not ekranı Kısmi hata mesajı başarısız öğrenciyi gösterir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T081"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan kısmi kayıt hatasından sonra filtre uyarısını korur",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T082"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan erken değerlendirme Bir staj seçildiğinde yalnız bir satır seçilir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T083"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan erken değerlendirme Not isteği doğru staj IDsi taşır",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T084"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan erken değerlendirme Not kaydı hata verince tutanak isteği gönderilmez",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T085"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye erken değerlendirme Bir staj seçildiğinde yalnız bir satır seçilir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T086"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye erken değerlendirme Not isteği doğru staj IDsi taşır",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T087"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye erken değerlendirme Not kaydı hata verince tutanak isteği gönderilmez",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T088"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan tutanak ekranı Normal tutanak isteği JSON olarak gönderilebilir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T089"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan tutanak ekranı Tutanağı yeniden oluşturma düğmesi vardır",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T090"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye tutanak ekranı Normal tutanak isteği JSON olarak gönderilebilir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T091"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye tutanak ekranı Tutanağı yeniden oluşturma düğmesi vardır",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T092"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan ek not senaryoları Yavaş kayıt sırasında çift tıklama tek istek gönderir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T093"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan ek not senaryoları Değiştirilmeyen kayıtlı not tekrar gönderilmez",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T094"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Başkan ek not senaryoları Eski kayıt yanıtı yeni dönemin listesini ezmez",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T095"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye ek not senaryoları Yavaş kayıt sırasında çift tıklama tek istek gönderir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T096"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye ek not senaryoları Değiştirilmeyen kayıtlı not tekrar gönderilmez",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T097"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Üye ek not senaryoları Eski kayıt yanıtı yeni dönemin listesini ezmez",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T098"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Düzeltme ağ hatasında form verisi korunur ve hata gösterilir",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T099"
+    },
+    {
+      "group": "Senaryolu arayüz kontrolleri",
+      "name": "Silme ağ hatasında yeniden deneme mümkün olur",
+      "observed": "Beklenen ekran davranışı doğrulandı.",
+      "status": "Başarılı",
+      "id": "T100"
+    },
+    {
+      "group": "Ek gerçek API senaryoları",
+      "name": "Tekli notlandırmada iki paralel eski yazımdan biri reddedilmeli.",
+      "observed": "10 denemenin 9unda iki istek de 200 döndü; koruma atomik değil. #38",
+      "status": "Başarısız",
+      "id": "T101"
+    },
+    {
+      "group": "Ek gerçek API senaryoları",
+      "name": "Not aynı kalırken yalnız açıklama değişirse eski açıklama güncel veriyi ezmemeli.",
+      "observed": "İki istek de başarılı; ikinci eski açıklama ilk güncel açıklamayı ezdi. #38",
+      "status": "Başarısız",
+      "id": "T102"
+    },
+    {
+      "group": "Ek gerçek API senaryoları",
+      "name": "Erken değerlendirme güncel notu eski ekran verisiyle ezmemeli.",
+      "observed": "Ekranın gönderdiği payload U notunu S olarak değiştirdi. #38",
+      "status": "Başarısız",
+      "id": "T103"
+    },
+    {
+      "group": "Ek gerçek API senaryoları",
+      "name": "Tutanak yeniden indirildiğinde değiştirilmiş güncel not görünmeli.",
+      "observed": "Yeniden oluşturulan DOCX içinde güncel U notu bulundu.",
+      "status": "Başarılı",
+      "id": "T104"
+    },
+    {
+      "group": "Ek gerçek API senaryoları",
+      "name": "Aynı dönemdeki başka bölümün stajı tutanağa alınmamalı.",
+      "observed": "Yabancı staj ve kurum DOCX içinde yok; yabancı isReported alanı değişmedi.",
+      "status": "Başarılı",
+      "id": "T105"
+    }
+  ],
+  "counts": {
+    "total": 105,
+    "passed": 95,
+    "failed": 10
+  }
+}
