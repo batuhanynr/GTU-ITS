@@ -1,0 +1,24 @@
+import React from 'react';
+import {render,screen,fireEvent,waitFor,within,act} from '@testing-library/react';
+import ChairGrade from '../pages/Chair/GradeInternship';
+import MemberGrade from '../pages/Member/GradeInternship';
+import InternshipActions from '../components/InternshipActions';
+import api from '../services/api';
+import axios from 'axios';
+jest.mock('../services/api',()=>({get:jest.fn(),post:jest.fn()}));
+jest.mock('axios',()=>({put:jest.fn(),delete:jest.fn()}));
+jest.mock('../services/authService',()=>({getCurrentUser:()=>({department:{id:1},role:{name:'Commission Chair'}}),getToken:()=> 'edge'}));
+const terms=[{id:1,name:'Old term',startDate:'2028-01-01T00:00:00Z',endDate:'2028-12-31T00:00:00Z'},{id:2,name:'New term',startDate:'2029-01-01T00:00:00Z',endDate:'2029-12-31T00:00:00Z'}];
+const row=(name,id,grade=null)=>({id:String(id),name,currentInternship:{id,grade,internshipOrder:'STAJ1',company:'Edge',startDate:'2028-06-01',endDate:'2028-07-01',durationDays:20}});
+const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve}};
+beforeEach(()=>{jest.clearAllMocks();jest.spyOn(window,'confirm').mockReturnValue(true);api.get.mockImplementation(async url=>({data:url.endsWith('/terms')?terms:[row('Old Student',101)]}));api.post.mockResolvedValue({data:{successCount:1,errorCount:0,errors:[]}})});
+afterEach(()=>jest.restoreAllMocks());
+const setgrade=(name,value)=>fireEvent.change(within(screen.getByText(name).closest('tr')).getByRole('combobox'),{target:{value}});
+describe.each([['Başkan',ChairGrade],['Üye',MemberGrade]])('%s ek not senaryoları',(_,Component)=>{
+ test('Yavaş kayıt sırasında çift tıklama tek istek gönderir',async()=>{const pending=deferred();api.post.mockReturnValue(pending.promise);render(<Component/>);await screen.findByText('Old Student');setgrade('Old Student','S');const button=screen.getByText('Tüm Notları Kaydet');fireEvent.click(button);fireEvent.click(button);const calls=api.post.mock.calls.length;await act(async()=>pending.resolve({data:{successCount:1,errorCount:0,errors:[]}}));expect(calls).toBe(1)});
+ test('Değiştirilmeyen kayıtlı not tekrar gönderilmez',async()=>{api.get.mockImplementation(async url=>({data:url.endsWith('/terms')?terms:[row('Old Student',101,'S'),row('Edited Student',102)]}));render(<Component/>);await screen.findByText('Old Student');fireEvent.change(screen.getByLabelText('Puana Göre Filtrele:'),{target:{value:'all'}});await waitFor(()=>expect(screen.getByLabelText('Puana Göre Filtrele:')).not.toBeDisabled());setgrade('Edited Student','U');fireEvent.click(screen.getByText('Tüm Notları Kaydet'));await waitFor(()=>expect(api.post).toHaveBeenCalled());expect(api.post.mock.calls[0][1].grades.map(x=>x.studentId)).toEqual(['102'])});
+ test('Eski kayıt yanıtı yeni dönemin listesini ezmez',async()=>{const pending=deferred();api.post.mockReturnValue(pending.promise);api.get.mockImplementation(async url=>({data:url.endsWith('/terms')?terms:url.includes('/1/2?')?[row('New Student',202)]:[row('Old Student',101)]}));render(<Component/>);await screen.findByText('Old Student');setgrade('Old Student','S');fireEvent.click(screen.getByText('Tüm Notları Kaydet'));const select=screen.getByLabelText('Dönem Seçiniz:');if(select.disabled){await act(async()=>pending.resolve({data:{successCount:1,errorCount:0,errors:[]}}));return;}fireEvent.change(select,{target:{value:'2'}});await screen.findByText('New Student');await act(async()=>pending.resolve({data:{successCount:1,errorCount:0,errors:[]}}));expect(screen.getByLabelText('Dönem Seçiniz:')).toHaveValue('2');expect(screen.getByText('New Student')).toBeInTheDocument();expect(screen.queryByText('Old Student')).not.toBeInTheDocument()});
+});
+const internship={id:42,company:'Edge',startDate:'2028-06-01',endDate:'2028-07-01',durationDays:20};
+test('Düzeltme ağ hatasında form verisi korunur ve hata gösterilir',async()=>{axios.put.mockRejectedValue(new Error('offline'));render(<InternshipActions internship={internship} onSaved={jest.fn()}/>);fireEvent.click(screen.getByText('Düzenle'));fireEvent.change(screen.getByLabelText('Kurum'),{target:{value:'Corrected'}});fireEvent.submit(screen.getByRole('form'));await screen.findByRole('alert');expect(screen.getByLabelText('Kurum')).toHaveValue('Corrected');expect(screen.getByText('Kaydet')).not.toBeDisabled()});
+test('Silme ağ hatasında yeniden deneme mümkün olur',async()=>{axios.delete.mockRejectedValue(new Error('offline'));const saved=jest.fn();render(<InternshipActions internship={internship} onSaved={saved}/>);fireEvent.click(screen.getByText('Sil'));await screen.findByRole('alert');expect(saved).not.toHaveBeenCalled();expect(screen.getByText('Sil')).not.toBeDisabled()});
