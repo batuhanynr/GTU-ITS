@@ -162,8 +162,9 @@ const GradeInternship = () => {
                         studentId: student.id,
                         internshipOrder: student.currentInternship.internshipOrder,
                         grade,
-                        // Optimistic lock: the grade the user started from; reject if it changed since.
-                        expectedGrade: student.currentInternship.grade ?? null
+                        // Optimistic lock: the grade and comment the user started from; reject if changed since.
+                        expectedGrade: student.currentInternship.grade ?? null,
+                        expectedGradeComment: student.currentInternship.gradeComment ?? null
                     };
 
                     // Only add gradeComment if it has content

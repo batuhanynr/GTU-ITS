@@ -179,7 +179,9 @@ const EarlyEvaluation = () => {
                     studentId: student.studentNumber,
                     internshipOrder: student.currentInternship.internshipOrder,
                     grade: evaluationData[internshipId].grade,
-                    gradeComment: evaluationData[internshipId].reason
+                    gradeComment: evaluationData[internshipId].reason,
+                    // Carry the grade seen on screen so a stale early evaluation cannot overwrite a newer one.
+                    expectedGrade: student.currentInternship.grade ?? null
                 };
             });
 
