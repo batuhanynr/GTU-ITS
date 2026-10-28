@@ -218,12 +218,20 @@ const GradeInternship = () => {
             const refreshResponse = await axios.get(
                 `${API_URL}/students/${user.department.id}/${selectedTermId}?${queryParams.toString()}`
             );
-            setStudents(refreshResponse.data);
-
-            // Keep pending edits for rows that failed so they can be retried; clear saved rows.
+            // Keep failed/conflicting rows visible even if the refreshed filter now excludes them.
             const failedIds = new Set((errors || []).map(e => e.internshipId));
+            const refreshed = refreshResponse.data;
+            const refreshedIds = new Set(refreshed.map(s => s.currentInternship?.id));
+            const keptFailedRows = students.filter(s => {
+                const id = s.currentInternship?.id;
+                return id && failedIds.has(id) && !refreshedIds.has(id);
+            });
+            const combined = [...refreshed, ...keptFailedRows];
+            setStudents(combined);
+
+            // Keep pending edits for failed rows (independent of the filter); clear saved rows.
             const grades = {}, notes = {};
-            refreshResponse.data.forEach(student => {
+            combined.forEach(student => {
                 const id = student.currentInternship?.id;
                 if (!id) return;
                 if (failedIds.has(id)) {
