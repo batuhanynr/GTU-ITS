@@ -8,7 +8,7 @@ import prisma from '../config/prisma.js';
  */
 export async function gradeInternship(req, res) {
   try {
-    const { internshipId, grade, gradeComment, expectedGrade } = req.body;
+    const { internshipId, grade, gradeComment, expectedGrade, expectedGradeComment } = req.body;
 
     // Grade a specific internship by its id so the exact record is targeted.
     if (!internshipId || !grade) {
@@ -28,33 +28,28 @@ export async function gradeInternship(req, res) {
     if (!target) return res.status(404).json({ error: 'Internship not found' });
     if (!await departmentAccess(req, res, target.student.departmentId)) return;
 
-    // Optimistic lock: when expectedGrade is sent, reject if the grade changed meanwhile.
-    if (expectedGrade !== undefined && target.grade !== (expectedGrade ?? null)) {
-      return res.status(409).json({ error: 'Conflict: grade was changed by someone else' });
-    }
-
-    // Update the internship with grade and optional comment
-    const updatedInternship = await prisma.internship.update({
-      where: { id: target.id },
+    // Atomic optimistic lock: put the expected prior value in the WHERE so two parallel
+    // writes with the same expectation cannot both succeed (no read-then-update race).
+    const where = { id: target.id };
+    if (expectedGrade !== undefined) where.grade = expectedGrade ?? null;
+    if (expectedGradeComment !== undefined) where.gradeComment = expectedGradeComment ?? null;
+    const result = await prisma.internship.updateMany({
+      where,
       data: {
         grade,
         gradeComment: gradeComment || null,
         status: 'COMPLETED', // Mark as completed when graded
       },
+    });
+    if (result.count === 0) {
+      return res.status(409).json({ error: 'Conflict: grade was changed by someone else' });
+    }
+
+    const updatedInternship = await prisma.internship.findUnique({
+      where: { id: target.id },
       include: {
-        student: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        company: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        student: { select: { id: true, name: true, email: true } },
+        company: { select: { id: true, name: true } },
       },
     });
 
@@ -99,7 +94,7 @@ export async function bulkGradeInternships(req, res) {
         errors.push({ error: 'Malformed grade row' });
         continue;
       }
-      const { internshipId, studentId, internshipOrder, grade, gradeComment } = gradeData;
+      const { internshipId, studentId, internshipOrder, grade, gradeComment, expectedGradeComment } = gradeData;
       console.log(`Processing grade for internship ${internshipId} (student ${studentId})`);
 
       // internshipId identifies the exact record; studentId/order are kept only for error context.
@@ -138,11 +133,13 @@ export async function bulkGradeInternships(req, res) {
           errors.push({ internshipId, studentId, internshipOrder, error: accessError });
           continue;
         }
-        // Optimistic lock: when the client sends the grade it last saw, only overwrite if it
-        // still matches, so a stale screen cannot clobber another evaluator's newer grade.
-        const where = { id: target.id };
-        if (Object.prototype.hasOwnProperty.call(gradeData, 'expectedGrade')) {
-          where.grade = gradeData.expectedGrade ?? null;
+        // Optimistic lock: only overwrite if the stored grade still matches what the client last
+        // saw. A bulk save always carries this baseline, so a missing expectedGrade means the
+        // client expected an ungraded record; a stale screen then cannot clobber a newer grade.
+        const where = { id: target.id, grade: (gradeData.expectedGrade ?? null) };
+        // When the client also sends the comment it last saw, protect comment-only edits too.
+        if (expectedGradeComment !== undefined) {
+          where.gradeComment = expectedGradeComment ?? null;
         }
         const updated = await prisma.internship.updateMany({
           where,
