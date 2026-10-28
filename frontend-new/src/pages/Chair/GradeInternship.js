@@ -429,10 +429,11 @@ const GradeInternship = () => {
                                             <td>{internship.startDate ? new Date(internship.startDate).toLocaleDateString('tr-TR') : 'N/A'}</td>
                                             <td>{internship.endDate ? new Date(internship.endDate).toLocaleDateString('tr-TR') : 'N/A'}</td>
                                             <td>
-                                                <select 
+                                                <select
                                                     className="grade-select"
                                                     value={getGradeValue(student)}
                                                     onChange={(e) => handleGradeChange(internship.id, e.target.value)}
+                                                    disabled={saving}
                                                 >
                                                     <option value="">Seçiniz</option>
                                                     <option value="S">S (Başarılı)</option>
@@ -440,12 +441,13 @@ const GradeInternship = () => {
                                                 </select>
                                             </td>
                                             <td>
-                                                <input 
+                                                <input
                                                     type="text"
                                                     className="note-input"
                                                     placeholder="Açıklama ekleyin..."
                                                     value={getNoteValue(student)}
                                                     onChange={(e) => handleNoteChange(internship.id, e.target.value)}
+                                                    disabled={saving}
                                                 />
                                             </td>
                                         </tr>
