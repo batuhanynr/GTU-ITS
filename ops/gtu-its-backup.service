@@ -1,0 +1,6 @@
+[Unit]
+Description=Back up the GTU internship database
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/gtu-its-backup
