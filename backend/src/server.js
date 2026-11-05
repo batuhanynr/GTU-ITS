@@ -29,6 +29,16 @@ app.get('/', (req, res) => {
     res.send('Staj Takip Sistemi Back-end (PostgreSQL + Prisma) Çalışıyor! 🚀');
 });
 
+// A release is healthy only when its database is reachable.
+app.get('/api/health', async (req, res) => {
+    try {
+        await prisma.$queryRaw`SELECT 1`;
+        res.json({ status: 'ok' });
+    } catch {
+        res.status(503).json({ status: 'unavailable' });
+    }
+});
+
 // Mount routes
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
