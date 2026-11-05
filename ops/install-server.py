@@ -65,6 +65,11 @@ if not site.exists():
 link = Path('/etc/nginx/sites-enabled/gtu-its')
 if not link.exists():
     link.symlink_to(site)
+if Path('/etc/letsencrypt/live/bmstaj.gtu.edu.tr/fullchain.pem').exists():
+    hooks = Path('/etc/letsencrypt/renewal-hooks/deploy')
+    hooks.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source / 'renew-nginx.sh', hooks / 'gtu-its-nginx.sh')
+    os.chmod(hooks / 'gtu-its-nginx.sh', 0o750)
 subprocess.run(['nginx', '-t'], check=True)
 subprocess.run(['systemctl', 'daemon-reload'], check=True)
 subprocess.run(['systemctl', 'enable', 'gtu-its-api.service', 'gtu-its-backup.timer'], check=True)
