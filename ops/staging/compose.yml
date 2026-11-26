@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-bookworm@sha256:cd0e9518bda5f2ea667ff84d22795d089720c883f288e215d97ce57437e8ef37
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gtu_its_staging
+      POSTGRES_USER: gtu_stage
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set the staging database password}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U gtu_stage -d gtu_its_staging']
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    logging: &logs
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '2'
+
+  api:
+    image: gtu-its-staging-api:${REVISION:?Set the release commit}
+    build: ../../backend
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      DATABASE_URL: postgresql://gtu_stage:${POSTGRES_PASSWORD}@db:5432/gtu_its_staging
+      JWT_SECRET: ${JWT_SECRET:?Set the staging JWT secret}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3001/api/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    logging: *logs
+
+  web:
+    image: gtu-its-staging-web:${REVISION:?Set the release commit}
+    build:
+      context: ../../frontend-new
+      dockerfile: Dockerfile.staging
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      # Keep the demo reachable through SSH forwarding only.
+      - '127.0.0.1:18126:80'
+    logging: *logs
+
+volumes:
+  database:

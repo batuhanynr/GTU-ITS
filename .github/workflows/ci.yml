@@ -72,3 +72,9 @@ jobs:
           cd ../e2e
           ./node_modules/.bin/playwright install --with-deps chromium
           ./node_modules/.bin/playwright test
+      - name: Validate the staging Compose file
+        env:
+          REVISION: ${{ github.sha }}
+          POSTGRES_PASSWORD: ci-only
+          JWT_SECRET: ci-only
+        run: docker compose -f ops/staging/compose.yml config --quiet
