@@ -10,16 +10,30 @@ Connect through the server's SSH session:
 ssh -N -L 18126:127.0.0.1:18126 batuhan-oracle1
 ```
 
-Open `http://127.0.0.1:18126`. The demo member is `winter.member@example.test` and the term is `Demo Winter Break 2026–2027`. Ask Batuhan for a staging session and the demo password. Use synthetic records. The demo dates are sample values.
+Open `http://127.0.0.1:18126` and select `2026–2027 Dönem Arası (Staging)` for the winter demo. The dates are sample values. Use synthetic records.
+
+| Role | Demo email |
+| --- | --- |
+| General Admin | `admin1@gtu.edu.tr` |
+| Commission Chair | `ceng_chair@gtu.edu.tr` |
+| Commission Member | `ceng_member1@gtu.edu.tr` |
+
+The 11 staff accounts use the local demo names and emails. Their individual passwords start with `staging-`. Ask Batuhan for staging access and the password for your account.
 
 ## Server setup
 
 Use an isolated rootless Docker account with its own home, systemd user session and resource limits. Clone `main` to `$HOME/source` without checking it out. Create `$HOME/staging.env` with mode `0600` and independent, randomly generated hexadecimal `POSTGRES_PASSWORD` and `JWT_SECRET` values. Install `sync.sh` as `$HOME/bin/gtu-stage-sync` and both units under `$HOME/.config/systemd/user/`. Run `systemctl --user daemon-reload` and `systemctl --user enable --now gtu-stage-sync.timer`. Check the deployment log with `journalctl --user -u gtu-stage-sync.service`. Reinstall the script and units when they change.
 
-After the first deploy, give the account a separate random password via `DEMO_MEMBER_PASSWORD` and run this as the staging user from its home:
+After the first deploy, run this as the staging user from its home. Keep the generated password file for repeat runs.
 
 ```sh
-REVISION=$(basename "$(readlink current)") docker compose -p gtu-its-staging \
-  --env-file staging.env -f current/ops/staging/compose.yml \
-  exec -T -e DEMO_MEMBER_PASSWORD api node --input-type=module < current/ops/staging/seed-demo.mjs
+umask 077
+export REVISION=$(basename "$(readlink current)")
+compose() { docker compose -p gtu-its-staging --env-file staging.env -f current/ops/staging/compose.yml "$@"; }
+if [ ! -f demo-accounts.json ]; then
+  compose exec -T api node --input-type=module - --generate-passwords < current/ops/staging/seed-demo.mjs > demo-accounts.json.tmp &&
+    mv demo-accounts.json.tmp demo-accounts.json
+fi
+STAGING_DEMO_PASSWORDS=$(cat demo-accounts.json) compose exec -T -e STAGING_DEMO_PASSWORDS api \
+  node --input-type=module < current/ops/staging/seed-demo.mjs
 ```
