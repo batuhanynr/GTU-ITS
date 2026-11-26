@@ -105,6 +105,7 @@ const Login = () => {
                         </button>
                     </form>
                 </div>
+                {process.env.REACT_APP_STAGING === 'true' && <p className="login-environment">Staging ortamı</p>}
             </div>
         </>
     );

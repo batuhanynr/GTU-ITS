@@ -6,6 +6,8 @@ COPY public ./public
 COPY src ./src
 # Keep browser requests on the staging gateway's origin.
 ENV REACT_APP_API_URL=/api
+# Identify the staging environment on the login page.
+ENV REACT_APP_STAGING=true
 RUN npm run build
 
 FROM nginx:stable-alpine@sha256:8eb04fe3b385090e9aa02961f77398ad09b6bf33ab07f6669a5bb7acce22c0d3
