@@ -1,0 +1,12 @@
+[Unit]
+Description=Deploy a passing GTU ITS main commit to staging
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h
+Environment=DOCKER_HOST=unix://%t/docker.sock
+Environment=COMPOSE_PARALLEL_LIMIT=1
+ExecStart=%h/bin/gtu-stage-sync
+TimeoutStartSec=12min
