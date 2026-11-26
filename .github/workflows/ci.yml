@@ -39,6 +39,7 @@ jobs:
           cache-dependency-path: |
             backend/package-lock.json
             frontend-new/package-lock.json
+            e2e/package-lock.json
       - name: Install dependencies
         run: |
           npm ci --prefix backend
@@ -59,3 +60,15 @@ jobs:
         env:
           CI: 'false'
         run: npm --prefix frontend-new run build
+      - name: Test sign-in in Chromium
+        env:
+          BOOTSTRAP_ADMIN_EMAIL: browser@example.test
+          BOOTSTRAP_ADMIN_PASSWORD: ci-browser-test-only-123
+          JWT_SECRET: ci-browser-test-only
+        run: |
+          npm ci --prefix e2e
+          cd backend
+          node scripts/bootstrap-production.js
+          cd ../e2e
+          ./node_modules/.bin/playwright install --with-deps chromium
+          ./node_modules/.bin/playwright test
