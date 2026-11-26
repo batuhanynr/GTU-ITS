@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-bookworm@sha256:cd0e9518bda5f2ea667ff84d22795d089720c883f288e215d97ce57437e8ef37
+        env:
+          POSTGRES_DB: gtu_ci_test
+          POSTGRES_USER: gtu_ci
+          POSTGRES_PASSWORD: ci-only
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U gtu_ci -d gtu_ci_test"
+          --health-interval 2s --health-timeout 5s --health-retries 15
+    env:
+      DATABASE_URL: postgresql://gtu_ci:ci-only@127.0.0.1:55432/gtu_ci_test
+      TEST_DATABASE_URL: postgresql://gtu_ci:ci-only@127.0.0.1:55432/gtu_ci_test
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend-new/package-lock.json
+      - name: Install dependencies
+        run: |
+          npm ci --prefix backend
+          npm ci --prefix frontend-new
+      - name: Apply database migrations
+        working-directory: backend
+        run: |
+          ./node_modules/.bin/prisma generate
+          ./node_modules/.bin/prisma migrate deploy
+      - name: Test the backend
+        run: |
+          node --test backend/tests/*.test.js
+          node --test --test-concurrency=1 backend/tests/integration/*.test.js
+      - name: Test the frontend
+        run: npm --prefix frontend-new test -- --watchAll=false --runInBand
+      - name: Build the frontend
+        # CRA treats existing lint warnings as build errors when CI=true.
+        env:
+          CI: 'false'
+        run: npm --prefix frontend-new run build
