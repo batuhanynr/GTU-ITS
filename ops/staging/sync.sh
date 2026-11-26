@@ -29,7 +29,8 @@ compose() {
 
 candidate="releases/$revision"
 mkdir -p "$candidate"
-git -C source archive "$revision" | tar -x -C "$candidate"
+# Keep checked-in modes so the non-root API process can read its files.
+git -C source archive "$revision" | tar --same-permissions -x -C "$candidate"
 # Build one image at a time within the staging account's memory limit.
 compose "$candidate" build api
 compose "$candidate" build web
