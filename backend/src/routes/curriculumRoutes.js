@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { authenticateToken, requireRole } from '../middlewares/auth.js';
-import { parseCurriculum } from '../controllers/curriculumController.js';
+import { parseCurriculum, checkEligibility } from '../controllers/curriculumController.js';
 
 const router = express.Router();
 
@@ -16,5 +16,6 @@ const upload = multer({
 });
 
 router.post('/curriculum/parse-pdf', authenticateToken, requireRole(['General Admin', 'Commission Chair', 'Commission Member']), upload.single('file'), parseCurriculum);
+router.post('/curriculum/eligibility', authenticateToken, requireRole(['General Admin', 'Commission Chair', 'Commission Member']), upload.single('file'), checkEligibility);
 
 export default router;
