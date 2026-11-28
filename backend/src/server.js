@@ -10,6 +10,7 @@ import departmentRoutes from './routes/departmentRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
 import gradingRoutes from './routes/gradingRoutes.js';
 import internshipRoutes from './routes/internshipRoutes.js';
+import curriculumRoutes from './routes/curriculumRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -46,6 +47,7 @@ app.use('/api', departmentRoutes);
 app.use('/api', studentRoutes);
 app.use('/api', gradingRoutes);
 app.use('/api', internshipRoutes);
+app.use('/api', curriculumRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
