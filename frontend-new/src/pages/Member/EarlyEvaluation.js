@@ -180,8 +180,9 @@ const EarlyEvaluation = () => {
                     internshipOrder: student.currentInternship.internshipOrder,
                     grade: evaluationData[internshipId].grade,
                     gradeComment: evaluationData[internshipId].reason,
-                    // Carry the grade seen on screen so a stale early evaluation cannot overwrite a newer one.
-                    expectedGrade: student.currentInternship.grade ?? null
+                    // Carry both baselines so a stale evaluation cannot overwrite a newer grade or comment.
+                    expectedGrade: student.currentInternship.grade ?? null,
+                    expectedGradeComment: student.currentInternship.gradeComment ?? null
                 };
             });
 

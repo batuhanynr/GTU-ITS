@@ -2,6 +2,7 @@ import app from './src/server.js';
 import prisma from './src/config/prisma.js';
 
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || '0.0.0.0';
 
 async function start() {
     try {
@@ -15,7 +16,8 @@ async function start() {
         process.exit(1);
     }
 
-    app.listen(PORT, () => {
+    // Production binds to loopback so Nginx is the only public entry point.
+    app.listen(PORT, HOST, () => {
         console.log(`✓ Server running on http://localhost:${PORT}`);
     });
 }

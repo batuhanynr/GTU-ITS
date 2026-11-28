@@ -1,0 +1,15 @@
+# Changes to checks and test expectations need a reviewer from the team.
+/.github/ @batuhanynr @ovalriver23
+/backend/tests/ @batuhanynr @ovalriver23
+/backend/package.json @batuhanynr @ovalriver23
+/backend/package-lock.json @batuhanynr @ovalriver23
+/backend/Dockerfile @batuhanynr @ovalriver23
+*.test.js @batuhanynr @ovalriver23
+/frontend-new/src/setupTests.js @batuhanynr @ovalriver23
+/frontend-new/package.json @batuhanynr @ovalriver23
+/frontend-new/package-lock.json @batuhanynr @ovalriver23
+/frontend-new/.dockerignore @batuhanynr @ovalriver23
+/frontend-new/Dockerfile.staging @batuhanynr @ovalriver23
+/frontend-new/nginx.staging.conf @batuhanynr @ovalriver23
+/e2e/ @batuhanynr @ovalriver23
+/ops/staging/ @batuhanynr @ovalriver23

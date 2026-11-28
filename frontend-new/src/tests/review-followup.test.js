@@ -32,6 +32,23 @@ describe.each([['Başkan',ChairGrade],['Üye',MemberGrade]])('%s kayıt sonrası
  });
 });
 describe.each([['Başkan',ChairEarly],['Üye',MemberEarly]])('%s erken değerlendirme çakışma koruması',(_,Component)=>{
+ test('Aynı notla değişen açıklama çakışır ve tutanak oluşturulmaz',async()=>{
+  const student=row('Alice',101,'S');student.currentInternship.gradeComment='Original';
+  api.get.mockImplementation(async url=>({data:url.endsWith('/terms')?terms:[student]}));
+  api.post.mockResolvedValue({data:{successCount:0,errorCount:1,errors:[{internshipId:101,error:'Conflict: comment was changed by someone else'}]}});
+  render(<Component/>);await screen.findByText('Alice');
+  fireEvent.change(screen.getByLabelText('Puana Göre Filtrele:'),{target:{value:'all'}});
+  await waitFor(()=>expect(screen.getAllByRole('checkbox')).toHaveLength(2));
+  fireEvent.click(screen.getAllByRole('checkbox')[1]);fireEvent.click(screen.getByText(/Erken Değerlendir \(/));
+  const modal=document.querySelector('.evaluation-item');
+  fireEvent.change(within(modal).getByRole('combobox'),{target:{value:'S'}});
+  fireEvent.change(within(modal).getByPlaceholderText('Erken değerlendirme sebebi...'),{target:{value:'Stale reason'}});
+  fireEvent.click(document.querySelector('.btn-modal-confirm'));
+  await waitFor(()=>expect(document.querySelector('.btn-modal-confirm')).not.toBeDisabled());
+  expect(api.post.mock.calls[0][1].grades[0]).toMatchObject({expectedGrade:'S',expectedGradeComment:'Original'});
+  expect(api.post).toHaveBeenCalledTimes(1);
+  expect(within(modal).getByPlaceholderText('Erken değerlendirme sebebi...')).toHaveValue('Stale reason');
+ });
  test('Not isteği ekranda görülen eski notu taşır',async()=>{
   api.get.mockImplementation(async url=>({data:url.endsWith('/terms')?terms:[row('Alice',101)]}));
   api.post.mockResolvedValue({data:{successCount:0,errorCount:1,errors:[{internshipId:101,error:'Test failure'}]}});

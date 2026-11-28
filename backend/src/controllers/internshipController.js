@@ -4,7 +4,7 @@ import prisma from '../config/prisma.js';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const pdf = require('pdf-parse');
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } from 'docx';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, PageOrientation, TableLayoutType } from 'docx';
 
 /**
  * Parse internship PDF file
@@ -561,10 +561,17 @@ export async function generateCommissionReport(req, res) {
       }
     });
 
-    // Generate Word document
+    // Fixed widths keep student numbers and dates intact while leaving room for long company names.
+    const columnWidths = [1800, 2500, 1000, 4900, 2100, 2100, 998];
     const doc = new Document({
+      styles: { default: { document: { run: { font: 'Arial', size: 20 }, paragraph: { spacing: { after: 0 } } } } },
       sections: [{
-        properties: {},
+        properties: {
+          page: {
+            size: { width: 11906, height: 16838, orientation: PageOrientation.LANDSCAPE },
+            margin: { top: 720, bottom: 720, left: 720, right: 720 }
+          }
+        },
         children: [
           // Title
           new Paragraph({
@@ -666,83 +673,45 @@ export async function generateCommissionReport(req, res) {
             ]
           }),
 
-          // Table with internship data
           new Table({
-            width: {
-              size: 100,
-              type: WidthType.PERCENTAGE,
-            },
+            width: { size: 15398, type: WidthType.DXA },
+            columnWidths,
+            layout: TableLayoutType.FIXED,
+            margins: { top: 80, bottom: 80, left: 80, right: 80 },
             rows: [
-              // Header row
+              // Repeat the header and keep each student's row together across page breaks.
               new TableRow({
-                children: [
-                  new TableCell({
-                    children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Öğrenci No', bold: true })] })],
-                    shading: { fill: 'CCCCCC' }
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Ad Soyad', bold: true })] })],
-                    shading: { fill: 'CCCCCC' }
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Staj Türü', bold: true })] })],
-                    shading: { fill: 'CCCCCC' }
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Staj Yeri', bold: true })] })],
-                    shading: { fill: 'CCCCCC' }
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Başlangıç Tarihi', bold: true })] })],
-                    shading: { fill: 'CCCCCC' }
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Bitiş Tarihi', bold: true })] })],
-                    shading: { fill: 'CCCCCC' }
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Not', bold: true })] })],
-                    shading: { fill: 'CCCCCC' }
-                  }),
-                ]
+                tableHeader: true,
+                cantSplit: true,
+                children: ['Öğrenci No', 'Ad Soyad', 'Staj Türü', 'Staj Yeri', 'Başlangıç Tarihi', 'Bitiş Tarihi', 'Not'].map((text, index) => new TableCell({
+                  width: { size: columnWidths[index], type: WidthType.DXA },
+                  children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text, bold: true })] })],
+                  shading: { fill: 'CCCCCC' }
+                }))
               }),
-              // Data rows
               ...internships.map(internship => new TableRow({
+                cantSplit: true,
                 children: [
-                  new TableCell({
-                    children: [new Paragraph({ text: internship.student.id, alignment: AlignmentType.CENTER })]
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ text: internship.student.name })]
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ text: internship.internshipOrder === 'STAJ1' ? 'Staj 1' : 'Staj 2', alignment: AlignmentType.CENTER })]
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ text: internship.company.name })]
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ text: new Date(internship.startDate).toLocaleDateString('tr-TR'), alignment: AlignmentType.CENTER })]
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ text: new Date(internship.endDate).toLocaleDateString('tr-TR'), alignment: AlignmentType.CENTER })]
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ text: internship.grade || '-', alignment: AlignmentType.CENTER })]
-                  }),
-                ]
+                  internship.student.id,
+                  internship.student.name,
+                  internship.internshipOrder === 'STAJ1' ? 'Staj 1' : 'Staj 2',
+                  internship.company.name,
+                  new Date(internship.startDate).toLocaleDateString('tr-TR'),
+                  new Date(internship.endDate).toLocaleDateString('tr-TR'),
+                  internship.grade || '-'
+                ].map((text, index) => new TableCell({
+                  width: { size: columnWidths[index], type: WidthType.DXA },
+                  children: [new Paragraph({ text, alignment: [1, 3].includes(index) ? AlignmentType.LEFT : AlignmentType.CENTER })]
+                }))
               }))
             ]
           }),
 
-          // Footer space for signatures
-          new Paragraph({
-            text: '',
-            spacing: { before: 800, after: 400 }
-          }),
+          // Keep the signature line with its label when the table ends near a page break.
           new Paragraph({
             text: '___________________________',
-            spacing: { after: 100 }
+            keepNext: true,
+            spacing: { before: 600, after: 100 }
           }),
           new Paragraph({
             text: 'Komisyon Başkanı İmzası',

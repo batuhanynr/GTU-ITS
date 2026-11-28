@@ -64,3 +64,7 @@ coverage/
 /*.zip
 /*.rar
 /*.7z
+
+# Keep server notes and local production credentials out of Git.
+/PRODUCTION_LOCAL.md
+/.local-production/

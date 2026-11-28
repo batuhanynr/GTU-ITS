@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily GTU internship database backup
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+RandomizedDelaySec=15m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
